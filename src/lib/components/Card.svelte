@@ -13,7 +13,7 @@
 	style:width="250px" 
 	style:height="400px"
 	style:margin="5px"
-	style:background-color={card.type === CardType.Action ? '#e6ffe6' : card.type === CardType.Advantage ? 'lightyellow' : card.type == CardType.EpicTale ? 'lightred' : ''}
+	style:background-color={card.type === CardType.Action ? '#e6ffe6' : card.type === CardType.Advantage ? 'lightyellow' : card.type == CardType.EpicTale ? '#ffe6e6' : ''}
 >
 	<div style:position="absolute">
 		{#if card.isSeason}

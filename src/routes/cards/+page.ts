@@ -110,10 +110,24 @@ export function load(): { actionCards: Card[], epicTaleCards: Card[], advantageC
 			}
 		],
 		epicTaleCards: [
-
+			{
+				name: 'Balor\'s Eye',
+				type: CardType.EpicTale,
+				isSeason: true,
+				isTriskal: false,
+				seasonMessage: 'Remove 1 clan from any territory.',
+				triskalMessage: ''
+			}
 		],
 		advantageCards: [
-
+			{
+				name: 'Cove',
+				type: CardType.Advantage,
+				isSeason: false,
+				isTriskal: true,
+				seasonMessage: '',
+				triskalMessage: 'After you play a Season card:\nTake the Action card set aside during Assembly phase; then set aside 1 Action card.'
+			}
 		]
 	};
 }
