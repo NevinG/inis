@@ -3,6 +3,7 @@
 	export let data;
 </script>
 
+<a href="/">back</a>
 <h1>Action Cards</h1>
 {#each data.actionCards as card}
 	<CardComponent {card} />
@@ -13,7 +14,7 @@
 	<CardComponent {card} />
 {/each}
 
-<h1>Action Advantage Cards</h1>
+<h1>Advantage Cards</h1>
 {#each data.advantageCards as card}
 	<CardComponent {card} />
 {/each}
