@@ -23,8 +23,6 @@ app.post("/api/create/", (request: Request, response: Response<GameState>) => {
 });
 
 app.get("/api/game/:id", (request: Request<{id: string}>, response: Response<GameState>) => {
-  console.log(request.params.id);
-  console.log(currentGames[request.params.id]);
   response.send(currentGames[request.params.id]);
 });
 
