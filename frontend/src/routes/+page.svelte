@@ -3,4 +3,4 @@
 <a href="/cards">View Cards</a>
 <a href="/tiles">View Tiles</a>
 <a href="/create"><button>Create Game</button></a>
-<a href="/join"><button>Join Game</button></a>
+<a href="/join"><button>View Public Games</button></a>

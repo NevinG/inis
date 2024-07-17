@@ -1,11 +1,11 @@
 <script lang="ts">
-  let gameCode : string = "";
-
-  function clickJoin() {
-    window.location.href = `/join/${gameCode}`;
-  }
+  export let data;
 </script>
 
-<label for="game-code">Game Code:</label>
-<input id="game-code" type="text" placeholder="Enter Game Code" bind:value={gameCode}/>
-<button on:click={clickJoin}>Join Game</button>
+<a href="/">back</a>
+{#if data.games.length == 0}
+<h2>No Games Available</h2>
+{/if}
+{#each data.games as game}
+  <div>Players: {game.currentPlayers} / {game.maxPlayers} <a href="/game/{game.id}"><button>Join Game</button></a></div>
+{/each}

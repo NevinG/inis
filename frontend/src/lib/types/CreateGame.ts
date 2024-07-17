@@ -1,6 +1,6 @@
 import type { GamePrivacy } from "./GameState"
 
 export type CreateGame = {
-  players: number,
+  maxPlayers: number,
   privacy: GamePrivacy
 }
