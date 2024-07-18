@@ -11,6 +11,7 @@ export type RestrictedGameState = {
   playerId: string;
   privacy: GamePrivacy;
   hasStarted: boolean;
+  tenSecondStartingCountdown: boolean;
   maxPlayers: number;
   players: {[playerId : string] : Player};
 }
@@ -19,6 +20,7 @@ export class GameState{
   id: string;
   privacy: GamePrivacy;
   hasStarted: boolean = false;
+  tenSecondStartingCountdown: boolean = false;
   maxPlayers: number;
   players: {[playerId : string] : Player} = {};
 
@@ -34,6 +36,7 @@ export class GameState{
       playerId: playerId,
       privacy: this.privacy,
       hasStarted: this.hasStarted,
+      tenSecondStartingCountdown: this.tenSecondStartingCountdown,
       maxPlayers: this.maxPlayers,
       players: this.players
     }

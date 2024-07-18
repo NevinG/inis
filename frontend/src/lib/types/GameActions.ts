@@ -11,10 +11,11 @@ export type JoinGame = {
   name: string;
 }
 
-export enum GameActionType {
+enum GameActionType {
   JoinGame,
   ViewGame,
-  Error,
+  ReadyUp,
+  UnreadyUp
 }
 
 export class GameActionFactory {
@@ -32,6 +33,24 @@ export class GameActionFactory {
   static async viewGame(gameId: string): Promise<GameAction<{}>>{
     return {
       type: GameActionType.ViewGame,
+      gameId,
+      playerJWT: await getJWT(),
+      data: {},
+    };
+  }
+
+  static async readyUp(gameId: string): Promise<GameAction<{}>>{
+    return {
+      type: GameActionType.ReadyUp,
+      gameId,
+      playerJWT: await getJWT(),
+      data: {},
+    };
+  }
+
+  static async unreadyUp(gameId: string): Promise<GameAction<{}>>{
+    return {
+      type: GameActionType.UnreadyUp,
       gameId,
       playerJWT: await getJWT(),
       data: {},

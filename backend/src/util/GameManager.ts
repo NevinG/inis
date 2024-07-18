@@ -5,6 +5,7 @@ import {
   RestrictedGameState,
 } from "../types/GameState";
 import { Player } from "../types/Player";
+import { SocketManager } from "./SocketManager";
 
 export default class GameManager {
   static currentGames: { [gameId: string]: GameState } = {};
@@ -32,10 +33,7 @@ export default class GameManager {
     return id in this.currentGames;
   }
 
-  public static getGame(
-    playerId: string,
-    id: string
-  ): RestrictedGameState {
+  public static getGame(playerId: string, id: string): RestrictedGameState {
     return this.currentGames[id].getGameInstance(playerId);
   }
 
@@ -58,5 +56,58 @@ export default class GameManager {
       game.players[playerId].socketId,
       game.getGameInstance(playerId),
     ]);
+  }
+
+  public static readyUp(
+    playerId: string,
+    gameId: string
+  ): [string, RestrictedGameState][] {
+    this.currentGames[gameId].players[playerId].ready = true;
+    const game = this.currentGames[gameId];
+
+    this.checkIfAllReady(gameId);
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static unreadyUp(
+    playerId: string,
+    gameId: string
+  ): [string, RestrictedGameState][] {
+    this.currentGames[gameId].players[playerId].ready = false;
+    const game = this.currentGames[gameId];
+
+    this.checkIfAllReady(gameId);
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  private static checkIfAllReady(gameId: string): void {
+    const game = this.currentGames[gameId];
+    if (Object.keys(game.players).every(
+      (playerId) => game.players[playerId].ready
+    ) && Object.keys(game.players).length > 1) {
+      game.tenSecondStartingCountdown = true;
+      setTimeout(() => {
+        if(game.tenSecondStartingCountdown)
+          game.hasStarted = true;
+        game.tenSecondStartingCountdown = false;
+
+        //update all players with started game
+        Object.keys(game.players).forEach((playerId) => {
+          SocketManager.currentSockets[game.players[playerId].socketId].send(JSON.stringify(game.getGameInstance(playerId)));
+        });
+      }, 10 * 1000)
+    }else {
+      game.tenSecondStartingCountdown = false;
+    }
   }
 }

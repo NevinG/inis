@@ -1,4 +1,4 @@
-import { GamePrivacy, GameState, RestrictedGameState } from "../types/GameState";
+import { Player } from "../types/Player";
 import GameManager from "./GameManager";
 import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
 
@@ -6,7 +6,7 @@ type GameAction = {
   type: GameActionType;
   gameId: string;
   playerJWT: string;
-  data: object;
+  data: JoinGame;
 };
 
 type JoinGame = {
@@ -16,7 +16,8 @@ type JoinGame = {
 enum GameActionType {
   JoinGame,
   ViewGame,
-  Error,
+  ReadyUp,
+  UnreadyUp,
 }
 
 export class SocketManager {
@@ -26,15 +27,15 @@ export class SocketManager {
     this.currentSockets[ws.id] = ws;
   }
 
-  public static HandleMessage(
-    socketId: string,
-    message: string
-  ): void {
+  public static HandleMessage(socketId: string, message: string): void {
     const gameAction = JSON.parse(message) as GameAction;
     //jwt verification
     let playerId: string = "";
     try {
-      const jwtData  = jwt.verify(gameAction.playerJWT, process.env.TOKEN_SECRET as string) as JwtPayload;
+      const jwtData = jwt.verify(
+        gameAction.playerJWT,
+        process.env.TOKEN_SECRET as string
+      ) as JwtPayload;
       playerId = jwtData.id;
     } catch (e) {
       //remove connection
@@ -42,24 +43,41 @@ export class SocketManager {
     }
 
     //make sure valid game id
-    if(!GameManager.gameExists(gameAction.gameId)){
+    if (!GameManager.gameExists(gameAction.gameId)) {
       return null!;
     }
 
     switch (gameAction.type) {
       case GameActionType.ViewGame:
-        this.currentSockets[socketId].send(JSON.stringify(GameManager.getGame(playerId, gameAction.gameId)));
+        this.currentSockets[socketId].send(
+          JSON.stringify(GameManager.getGame(playerId, gameAction.gameId))
+        );
         break;
 
       case GameActionType.JoinGame:
         const joinGame = gameAction.data as JoinGame;
-        GameManager.joinGame({
-          id: playerId,
-          socketId: socketId,
-          name: joinGame.name,
-        }, gameAction.gameId).forEach(([socketId, gameState]) => {
+        GameManager.joinGame(
+          new Player(playerId, socketId, joinGame.name),
+          gameAction.gameId
+        ).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
-        })
+        });
+        break;
+
+      case GameActionType.ReadyUp:
+        GameManager.readyUp(playerId, gameAction.gameId).forEach(
+          ([socketId, gameState]) => {
+            this.currentSockets[socketId].send(JSON.stringify(gameState));
+          }
+        );
+        break;
+      case GameActionType.UnreadyUp:
+        GameManager.unreadyUp(playerId, gameAction.gameId).forEach(
+          ([socketId, gameState]) => {
+            this.currentSockets[socketId].send(JSON.stringify(gameState));
+          }
+        );
+        break;
     }
 
     return null!;
