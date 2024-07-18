@@ -1,4 +1,4 @@
-import { type Card, CardType } from '$lib/types/card';
+import { type Card, CardType } from '$lib/types/Card';
 
 export function load(): { actionCards: Card[], epicTaleCards: Card[], advantageCards: Card[] } {
 	return {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Tile } from '$lib/types/tile';
+	import type { Tile } from '$lib/types/Tile';
 	export let tile: Tile;
 	let randomColor = Math.floor(Math.random() * 200);
   let width = 500;

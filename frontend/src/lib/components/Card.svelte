@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CardType, type Card } from '$lib/types/card';
+	import { CardType, type Card } from '$lib/types/Card';
 	import SeasonSymbol from './SeasonSymbol.svelte';
 	import TriskalSymbol from './TriskalSymbol.svelte';
 	export let card: Card;

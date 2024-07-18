@@ -1,4 +1,4 @@
-import type { Tile } from '$lib/types/tile';
+import type { Tile } from '$lib/types/Tile';
 
 export function load(): { tiles: Tile[] } {
 	return {
