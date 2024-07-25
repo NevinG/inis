@@ -6,18 +6,23 @@ type GameAction = {
   type: GameActionType;
   gameId: string;
   playerJWT: string;
-  data: JoinGame;
+  data: JoinGame | DraftCards;
 };
 
 type JoinGame = {
   name: string;
 };
 
+export type DraftCards = {
+  cardsToKeep: string[] //ids of cards you are keeping
+}
+
 enum GameActionType {
   JoinGame,
   ViewGame,
   ReadyUp,
   UnreadyUp,
+  DraftCards
 }
 
 export class SocketManager {
@@ -71,8 +76,18 @@ export class SocketManager {
           }
         );
         break;
+
       case GameActionType.UnreadyUp:
         GameManager.unreadyUp(playerId, gameAction.gameId).forEach(
+          ([socketId, gameState]) => {
+            this.currentSockets[socketId].send(JSON.stringify(gameState));
+          }
+        );
+        break;
+
+      case GameActionType.DraftCards:
+        const draftCards = gameAction.data as DraftCards;
+        GameManager.draftCards(playerId, gameAction.gameId, draftCards.cardsToKeep).forEach(
           ([socketId, gameState]) => {
             this.currentSockets[socketId].send(JSON.stringify(gameState));
           }

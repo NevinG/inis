@@ -28,7 +28,7 @@ app.get("/api/auth", (request: Request, response: Response<{jwt: string}>) => {
   if(!token) {
     response.send({jwt: jwt.sign({id: crypto.randomUUID()}, process.env.TOKEN_SECRET!, { expiresIn: '24hr' }) as string});
   }else{
-    const jwtData  = jwt.verify(token, process.env.TOKEN_SECRET as string) as JwtPayload;
+    const jwtData  = jwt.decode(token) as JwtPayload;
     response.send({jwt: jwt.sign({id: jwtData.id}, process.env.TOKEN_SECRET!, { expiresIn: '24hr' }) as string});
   }
 });

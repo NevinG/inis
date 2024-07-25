@@ -11,11 +11,16 @@ export type JoinGame = {
   name: string;
 }
 
+export type DraftCards = {
+  cardsToKeep: string[] //ids of cards you are keeping
+}
+
 enum GameActionType {
   JoinGame,
   ViewGame,
   ReadyUp,
-  UnreadyUp
+  UnreadyUp,
+  DraftCards
 }
 
 export class GameActionFactory {
@@ -54,6 +59,17 @@ export class GameActionFactory {
       gameId,
       playerJWT: await getJWT(),
       data: {},
+    };
+  }
+
+  static async draftCards(gameId: string, cardsToKeep: string[]): Promise<GameAction<DraftCards>>{
+    return {
+      type: GameActionType.DraftCards,
+      gameId,
+      playerJWT: await getJWT(),
+      data: {
+        cardsToKeep: cardsToKeep
+      },
     };
   }
 }
