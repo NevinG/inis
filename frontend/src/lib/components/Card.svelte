@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { CardType, type Card } from '$lib/types/Card';
+	import { CardType, type Card, type SelectableCard } from '$lib/types/Card';
 	import SeasonSymbol from './SeasonSymbol.svelte';
 	import TriskalSymbol from './TriskalSymbol.svelte';
-	export let card: Card;
+	export let card: SelectableCard;
 </script>
 
 <div
@@ -14,6 +14,7 @@
 	style:height="400px"
 	style:margin="5px"
 	style:background-color={card.type === CardType.Action ? '#e6ffe6' : card.type === CardType.Advantage ? 'lightyellow' : card.type == CardType.EpicTale ? '#ffe6e6' : ''}
+	style:border-width={card.selected ? "3px" : "1px"}
 >
 	<div style:position="absolute">
 		{#if card.isSeason}

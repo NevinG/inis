@@ -1,4 +1,4 @@
-import type { Player } from "./Player"
+import type { Player, RestrictedPlayer } from "./Player"
 
 export type GamePreview = {
   id: string;
@@ -13,7 +13,10 @@ export type RestrictedGameState = {
   hasStarted: boolean;
   tenSecondStartingCountdown: boolean;
   maxPlayers: number;
-  players: {[playerId : string] : Player};
-}
+  players: { [playerId: string]: RestrictedPlayer };
+
+  isDrafting: boolean;
+  cardsToDraft: number;
+};
 
 export enum GamePrivacy { Public, Private } 
