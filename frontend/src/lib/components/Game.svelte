@@ -19,6 +19,9 @@
 	}
 </script>
 
+<!-- Render gameboard tiles -->
+ 
+
 <!-- render your cards -->
 <div>
 	{#if restrictedGameState.isDrafting}
