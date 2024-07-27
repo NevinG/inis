@@ -25,6 +25,19 @@
 </script>
 
 <!-- Render gameboard tiles -->
+<!-- TODO: make the height not just 200px, but dynamic and cool -->
+<div style:width={"100%"} style:height={"200px"}>
+	{#each Object.entries(restrictedGameState.players) as [_, player]}
+		<div
+		  style:width = "20px"
+		  style:height = "20px"
+			style:background-color = "blue"
+			style:display = "inline-block"
+			style:margin = "5px"
+		>
+		</div>
+	{/each}
+</div>
 <!--TODO: make height not just 500px, but dynamic and cool-->
 <div 
   style:width={"100%"} 

@@ -8,6 +8,7 @@ export type RestrictedPlayer = {
   actionCards: number;
   advantageCards: number;
   hand: Card[];
+  reserveClans: number;
 };
 
 export class Player {
@@ -17,6 +18,7 @@ export class Player {
   ready: boolean = false;
   hand: Card[] = [];
   handForDraft : Card[] = [];
+  reserveClans: number = 12;
 
   constructor(id: string, socketId: string, name: string) {
     this.id = id;
@@ -29,6 +31,7 @@ export class Player {
       id: this.id,
       name: this.name,
       ready: this.ready,
+      reserveClans: this.reserveClans,
       epicTaleCards: this.hand.filter((card) => card.type == CardType.EpicTale)
         .length,
       actionCards: this.hand.filter((card) => card.type == CardType.Action)
