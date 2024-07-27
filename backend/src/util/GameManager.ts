@@ -166,6 +166,10 @@ export default class GameManager {
     game.cardsToDraft = 1;
     //tiles
     game.addStartingTiles();
+    //pick bren
+    game.bren = Object.keys(game.players)[
+      Math.floor(Math.random() * Object.keys(game.players).length)
+    ];
 
     //send game state to all players
     Object.keys(game.players).forEach((playerId) => {

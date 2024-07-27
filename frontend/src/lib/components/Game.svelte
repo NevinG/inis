@@ -24,8 +24,8 @@
 	let tileMapOffset = { x: 0, y: 0 }; //used for dragging around the gameboard
 </script>
 
-<!-- Render gameboard tiles -->
-<div style:width={'100%'} style:border-bottom={'1px solid gray'}>
+<!-- Render players info -->
+<div style:width={'100%'} style:border-bottom={'1px solid gray'} style:display="flex">
 	{#each Object.entries(restrictedGameState.players) as [_, player]}
 		<div style:display="inline-block">
 			<!-- Player Name -->
@@ -75,9 +75,12 @@
 					/>
 				{/each}
 			</div>
+			{#if restrictedGameState.bren == player.id}<div style:margin="5px">Bren</div>{/if}
 		</div>
 	{/each}
 </div>
+
+<!-- Render game tiles -->
 <!--TODO: make height not just 350px, but dynamic and cool-->
 <div
 	style:width={'100%'}
