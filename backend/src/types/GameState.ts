@@ -20,7 +20,7 @@ export type RestrictedGameState = {
   isDrafting: boolean;
   cardsToDraft: number;
 
-  placedTiles: Record<string, Tile>;
+  tiles: {tile: Tile, positions: {x: number, y: number}[]}[];
 };
 
 export class GameState {
@@ -35,7 +35,7 @@ export class GameState {
   isDrafting: boolean = false;
   cardsToDraft: number = 0;
 
-  placedTiles: Record<string, Tile> = {};
+  tiles: {tile: Tile, positions: {x: number, y: number}[]}[] = [];
   tileDeck: Tile[] = JSON.parse(JSON.stringify(allTiles));
 
   actionCards: Card[] = JSON.parse(JSON.stringify(actionCards));
@@ -70,7 +70,7 @@ export class GameState {
         })
       ),
 
-      placedTiles: this.placedTiles,
+      tiles: this.tiles,
 
       isDrafting: this.isDrafting,
       cardsToDraft: this.cardsToDraft,
@@ -87,13 +87,16 @@ export class GameState {
   }
 
   addStartingTiles() {
-    this.placedTiles[`0,0`] = this.tileDeck.pop()!;
-    this.placedTiles[`1,0`] = this.tileDeck.pop()!;
-    this.placedTiles[`1,-1`] = this.tileDeck.pop()!;
-    this.placedTiles[`0,-1`] = this.tileDeck.pop()!;
-    this.placedTiles[`-1,0`] = this.tileDeck.pop()!;
-    this.placedTiles[`-1,1`] = this.tileDeck.pop()!;
-    this.placedTiles[`0,1`] = this.tileDeck.pop()!;
+    //first starting tile
+    const positions = [
+      [{x: 0, y: 0},{x: 1, y: -1},{x: 1, y: 0}],
+      [{x: 2, y: -1},{x: 3, y: -2},{x: 2, y: -2}],
+      [{x: 2, y: 0},{x: 3, y: -1},{x: 3, y: 0}],
+      [{x: 1, y: 1},{x: 2, y: 1},{x: 1, y: 2}],
+    ]
+    for(let i = 0; i < Object.keys(this.players).length; i++) {
+      this.tiles.push({tile: this.tileDeck.pop()!, positions: positions.pop()!});
+    }
   }
 }
 
