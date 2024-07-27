@@ -17,6 +17,7 @@ export type RestrictedGameState = {
   maxPlayers: number;
   players: { [playerId: string]: RestrictedPlayer };
   flockOfCrowsIsClockwise: boolean;
+  bren: string;
 
   isDrafting: boolean;
   cardsToDraft: number;
@@ -33,6 +34,7 @@ export class GameState {
   setAsideCard?: Card;
   players: { [playerId: string]: Player } = {};
   flockOfCrowsIsClockwise: boolean;
+  bren: string = "";
 
   isDrafting: boolean = false;
   cardsToDraft: number = 0;
@@ -75,7 +77,8 @@ export class GameState {
         })
       ),
       flockOfCrowsIsClockwise: this.flockOfCrowsIsClockwise,
-
+      bren: this.bren,
+      
       tiles: this.tiles,
 
       isDrafting: this.isDrafting,
