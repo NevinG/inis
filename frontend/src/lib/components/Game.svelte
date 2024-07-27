@@ -81,6 +81,11 @@
 	</div>
 </div>
 
+<!-- Render game data-->
+<div>
+	<span>Flock of crows: {restrictedGameState.flockOfCrowsIsClockwise ? "clockwise" : "counter-clockwise"}</span>
+</div>
+
 <!-- render your cards -->
 <div>
 	{#if restrictedGameState.isDrafting}

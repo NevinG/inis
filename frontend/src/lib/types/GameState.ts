@@ -15,7 +15,8 @@ export type RestrictedGameState = {
   tenSecondStartingCountdown: boolean;
   maxPlayers: number;
   players: { [playerId: string]: RestrictedPlayer };
-
+  flockOfCrowsIsClockwise: boolean;
+  
   isDrafting: boolean;
   cardsToDraft: number;
 

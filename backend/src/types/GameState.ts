@@ -16,6 +16,7 @@ export type RestrictedGameState = {
   tenSecondStartingCountdown: boolean;
   maxPlayers: number;
   players: { [playerId: string]: RestrictedPlayer };
+  flockOfCrowsIsClockwise: boolean;
 
   isDrafting: boolean;
   cardsToDraft: number;
@@ -31,6 +32,7 @@ export class GameState {
   maxPlayers: number;
   setAsideCard?: Card;
   players: { [playerId: string]: Player } = {};
+  flockOfCrowsIsClockwise: boolean;
 
   isDrafting: boolean = false;
   cardsToDraft: number = 0;
@@ -40,7 +42,7 @@ export class GameState {
 
   actionCards: Card[] = JSON.parse(JSON.stringify(actionCards));
   epicTaleCards: Card[] = JSON.parse(JSON.stringify(epicTaleCards));
-  advantageCards: Card[] = JSON.parse(JSON.stringify(actionCards));
+  advantageCards: Card[] = JSON.parse(JSON.stringify(advantageCards));
 
   constructor(privacy: GamePrivacy, maxPlayers: number) {
     this.maxPlayers = maxPlayers;
@@ -54,6 +56,9 @@ export class GameState {
 
     //shuffle tiles
     this.tileDeck = shuffle(this.tileDeck);
+
+    //flip flock of crows
+    this.flockOfCrowsIsClockwise = Math.random() < 0.5;
   }
 
   getGameInstance(playerId: string): RestrictedGameState {
@@ -69,6 +74,7 @@ export class GameState {
           return [pid, player.getPlayerInstance(playerId)];
         })
       ),
+      flockOfCrowsIsClockwise: this.flockOfCrowsIsClockwise,
 
       tiles: this.tiles,
 
