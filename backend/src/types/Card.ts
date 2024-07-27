@@ -15,10 +15,10 @@ export enum CardType {
   Action,
 }
 
-export const actionCards = [
+export const actionCards : Card[] = [
   {
     name: "Bard",
-    id: 1,
+    id: "1",
     type: CardType.Action,
     isSeason: true,
     isTriskal: true,
@@ -29,7 +29,7 @@ export const actionCards = [
   },
   {
     name: "Citadel",
-    id: 2,
+    id: "2",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -39,7 +39,7 @@ export const actionCards = [
   },
   {
     name: "Conquest",
-    id: 3,
+    id: "3",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -49,7 +49,7 @@ export const actionCards = [
   },
   {
     name: "Craftsmen & Peasants",
-    id: 4,
+    id: "4",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -59,7 +59,7 @@ export const actionCards = [
   },
   {
     name: "Druid",
-    id: 5,
+    id: "5",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -69,7 +69,7 @@ export const actionCards = [
   },
   {
     name: "Exploration",
-    id: 6,
+    id: "6",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -79,7 +79,7 @@ export const actionCards = [
   },
   {
     name: "Festival",
-    id: 7,
+    id: "7",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -89,7 +89,7 @@ export const actionCards = [
   },
   {
     name: "Geis",
-    id: 8,
+    id: "8",
     type: CardType.Action,
     isSeason: false,
     isTriskal: true,
@@ -98,7 +98,7 @@ export const actionCards = [
   },
   {
     name: "Migration",
-    id: 9,
+    id: "9",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -108,7 +108,7 @@ export const actionCards = [
   },
   {
     name: "New Alliance",
-    id: 10,
+    id: "10",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -118,7 +118,7 @@ export const actionCards = [
   },
   {
     name: "New Clans",
-    id: 11,
+    id: "11",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -128,7 +128,7 @@ export const actionCards = [
   },
   {
     name: "Sanctuary",
-    id: 12,
+    id: "12",
     type: CardType.Action,
     isSeason: true,
     isTriskal: false,
@@ -138,7 +138,7 @@ export const actionCards = [
   },
   {
     name: "Warlord",
-    id: 13,
+    id: "13",
     type: CardType.Action,
     isSeason: true,
     isTriskal: true,
@@ -152,7 +152,7 @@ export const actionCards = [
 export const epicTaleCards = [
   {
     name: "Balor's Eye",
-    id: 14,
+    id: "14",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -161,7 +161,7 @@ export const epicTaleCards = [
   },
   {
     name: "Battle Frenzy",
-    id: 15,
+    id: "15",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -171,7 +171,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Battle of Moytura",
-    id: 16,
+    id: "16",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -181,7 +181,7 @@ export const epicTaleCards = [
   },
   {
     name: "Breas' Tyranny",
-    id: 17,
+    id: "17",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -191,7 +191,7 @@ export const epicTaleCards = [
   },
   {
     name: "CathBad's Word",
-    id: 18,
+    id: "18",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -201,7 +201,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Champion's Share",
-    id: 19,
+    id: "19",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -210,7 +210,7 @@ export const epicTaleCards = [
   },
   {
     name: "Children of Dana",
-    id: 20,
+    id: "20",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -219,7 +219,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Dagda",
-    id: 21,
+    id: "21",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -229,7 +229,7 @@ export const epicTaleCards = [
   },
   {
     name: "Dagda's Cauldron",
-    id: 22,
+    id: "22",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -239,7 +239,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Dagda's Club",
-    id: 23,
+    id: "23",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -250,7 +250,7 @@ export const epicTaleCards = [
   },
   {
     name: "Dagda's Harp",
-    id: 24,
+    id: "24",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -260,7 +260,7 @@ export const epicTaleCards = [
   },
   {
     name: "Deirdre's Beauty",
-    id: 25,
+    id: "25",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -270,7 +270,7 @@ export const epicTaleCards = [
   },
   {
     name: "Diarmuid and Grainne",
-    id: 26,
+    id: "26",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -280,7 +280,7 @@ export const epicTaleCards = [
   },
   {
     name: "Eriu",
-    id: 27,
+    id: "27",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -290,7 +290,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Fianna",
-    id: 28,
+    id: "28",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -300,7 +300,7 @@ export const epicTaleCards = [
   },
   {
     name: "Kernuno's Sanctuary",
-    id: 29,
+    id: "29",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -310,7 +310,7 @@ export const epicTaleCards = [
   },
   {
     name: "Lug Samildanach",
-    id: 30,
+    id: "30",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -320,7 +320,7 @@ export const epicTaleCards = [
   },
   {
     name: "Lug's Spear",
-    id: 31,
+    id: "31",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -330,7 +330,7 @@ export const epicTaleCards = [
   },
   {
     name: "Maeve's Wealth",
-    id: 32,
+    id: "32",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -340,7 +340,7 @@ export const epicTaleCards = [
   },
   {
     name: "Manannan's Horses",
-    id: 33,
+    id: "33",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -350,7 +350,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Morrigan",
-    id: 34,
+    id: "34",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -360,7 +360,7 @@ export const epicTaleCards = [
   },
   {
     name: "Nuada Silverhand",
-    id: 35,
+    id: "35",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -370,7 +370,7 @@ export const epicTaleCards = [
   },
   {
     name: "Oengus's Ploy",
-    id: 36,
+    id: "36",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -380,7 +380,7 @@ export const epicTaleCards = [
   },
   {
     name: "Ogma's Eloquence",
-    id: 37,
+    id: "37",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -389,7 +389,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Other World",
-    id: 38,
+    id: "38",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -399,7 +399,7 @@ export const epicTaleCards = [
   },
   {
     name: "The Stone of Fal",
-    id: 39,
+    id: "39",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -408,7 +408,7 @@ export const epicTaleCards = [
   },
   {
     name: "Streng's Resolve",
-    id: 40,
+    id: "40",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -417,7 +417,7 @@ export const epicTaleCards = [
   },
   {
     name: "Tailtu's Land ",
-    id: 41,
+    id: "41",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -427,7 +427,7 @@ export const epicTaleCards = [
   },
   {
     name: "Tale of Cuchulain",
-    id: 42,
+    id: "42",
     type: CardType.EpicTale,
     isSeason: false,
     isTriskal: true,
@@ -437,7 +437,7 @@ export const epicTaleCards = [
   },
   {
     name: "Tuan's Memory",
-    id: 43,
+    id: "43",
     type: CardType.EpicTale,
     isSeason: true,
     isTriskal: false,
@@ -449,7 +449,7 @@ export const epicTaleCards = [
 export const advantageCards = [
   {
     name: "Cove",
-    id: 44,
+    id: "44",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -459,7 +459,7 @@ export const advantageCards = [
   },
   {
     name: "Forest",
-    id: 45,
+    id: "45",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -468,7 +468,7 @@ export const advantageCards = [
   },
   {
     name: "Gates of Tír Na Nóg",
-    id: 46,
+    id: "46",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -478,7 +478,7 @@ export const advantageCards = [
   },
   {
     name: "Highlands",
-    id: 47,
+    id: "47",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -488,7 +488,7 @@ export const advantageCards = [
   },
   {
     name: "Hills",
-    id: 48,
+    id: "48",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -498,7 +498,7 @@ export const advantageCards = [
   },
   {
     name: "Iron Mine",
-    id: 49,
+    id: "49",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -508,7 +508,7 @@ export const advantageCards = [
   },
   {
     name: "Lost Vale",
-    id: 50,
+    id: "50",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -518,7 +518,7 @@ export const advantageCards = [
   },
   {
     name: "Meadows",
-    id: 51,
+    id: "51",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -528,7 +528,7 @@ export const advantageCards = [
   },
   {
     name: "Misty Lands",
-    id: 52,
+    id: "52",
     type: CardType.Advantage,
     isSeason: true,
     isTriskal: false,
@@ -538,7 +538,7 @@ export const advantageCards = [
   },
   {
     name: "Moor",
-    id: 53,
+    id: "53",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -547,7 +547,7 @@ export const advantageCards = [
   },
   {
     name: "Mountains",
-    id: 54,
+    id: "54",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -557,7 +557,7 @@ export const advantageCards = [
   },
   {
     name: "Plains",
-    id: 55,
+    id: "55",
     type: CardType.Advantage,
     isSeason: true,
     isTriskal: false,
@@ -567,7 +567,7 @@ export const advantageCards = [
   },
   {
     name: "Salt Mine",
-    id: 56,
+    id: "56",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -577,7 +577,7 @@ export const advantageCards = [
   },
   {
     name: "Stone Circle",
-    id: 57,
+    id: "57",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,
@@ -587,7 +587,7 @@ export const advantageCards = [
   },
   {
     name: "Swamp",
-    id: 58,
+    id: "58",
     type: CardType.Advantage,
     isSeason: true,
     isTriskal: false,
@@ -596,7 +596,7 @@ export const advantageCards = [
   },
   {
     name: "Valley",
-    id: 59,
+    id: "59",
     type: CardType.Advantage,
     isSeason: false,
     isTriskal: true,

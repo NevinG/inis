@@ -164,6 +164,9 @@ export default class GameManager {
     //start drafting
     game.isDrafting = true;
     game.cardsToDraft = 1;
+    //tiles
+    game.addStartingTiles();
+
     //send game state to all players
     Object.keys(game.players).forEach((playerId) => {
       SocketManager.currentSockets[game.players[playerId].socketId].send(

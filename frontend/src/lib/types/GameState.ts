@@ -1,4 +1,5 @@
 import type { Player, RestrictedPlayer } from "./Player"
+import type { Tile } from "./Tile";
 
 export type GamePreview = {
   id: string;
@@ -17,6 +18,8 @@ export type RestrictedGameState = {
 
   isDrafting: boolean;
   cardsToDraft: number;
+
+  placedTiles: Record<string, Tile>;
 };
 
 export enum GamePrivacy { Public, Private } 

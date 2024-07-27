@@ -2,7 +2,9 @@
 	import type { Tile } from '$lib/types/Tile';
 	export let tile: Tile;
 	let randomColor = Math.floor(Math.random() * 200);
-  let height = 180;
+  export let width = 180;
+
+	export let variant: boolean;
 </script>
 <style>
 	.hex {
@@ -13,12 +15,25 @@
 		border: 1px solid green;
 	}
 </style>
-<div style:height={height + "px"} style:width={`${(height /2 ) / (Math.pow(3,.5) / 2) + Math.pow(3,.5)*(height/4)}px`}>
-		<div style:height={height / 2 + "px"} class="hex" style:transform={`translateY(${height/4}px)`}/>
-		<div style:height={height / 2 + "px"} style:transform={`translate(${(Math.pow(3,.5)*height/4)}px,0)`} class="hex"/>
-		<div style:height={height / 2 + "px"} style:transform={`translate(${(Math.pow(3,.5)*height/4)}px,${height/2}px)`} class="hex"/>
-	<!-- <div style:position="relative" style:top="50%">
-		<p style:text-align="center">{tile.name}</p>
-		<p style:text-align="center">{tile.text}</p>
-	</div> -->
+
+{#if variant}
+<div style:rotate={"30deg"} style:height={width + "px"} style:width={`${(width /2 ) / (Math.pow(3,.5) / 2) + Math.pow(3,.5)*(width/4)}px`}>
+	<div style:height={width / 2 + "px"} style:transform={`translateY(${width/4}px)`} class="hex"/>
+	<div style:height={width / 2 + "px"} style:transform={`translate(${(Math.pow(3,.5)*width/4)}px,0)`} class="hex"/>
+	<div style:height={width / 2 + "px"} style:transform={`translate(${(Math.pow(3,.5)*width/4)}px,${width/2}px)`} class="hex"/>
+<div style:position="relative" style:top={"25%"} style:transform={"translateY(0)"}>
+	<p style:margin-top=0 style:text-align="center">{tile.name}</p>
+	<p style:text-align="center">{tile.text ?? ""}</p>
 </div>
+</div>
+{:else}
+<div style:rotate={"-30deg"} style:height={width + "px"} style:width={`${(width /2 ) / (Math.pow(3,.5) / 2) + Math.pow(3,.5)*(width/4)}px`}>
+	<div style:height={width / 2 + "px"} style:transform={`translateY(${width/4}px)`} class="hex"/>
+	<div style:height={width / 2 + "px"} style:transform={`translate(${(Math.pow(3,.5)*width/4)}px,0)`} class="hex"/>
+	<div style:height={width / 2 + "px"} style:transform={`translate(${(Math.pow(3,.5)*width/4)}px,${width/2}px)`} class="hex"/>
+<div style:position="relative" style:top={"25%"} style:transform={"translateY(0)"}>
+	<p style:margin-top=0 style:text-align="center">{tile.name}</p>
+	<p style:text-align="center">{tile.text ?? ""}</p>
+</div>
+</div>
+{/if}

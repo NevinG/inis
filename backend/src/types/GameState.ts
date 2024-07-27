@@ -1,5 +1,6 @@
 import { actionCards, advantageCards, Card, epicTaleCards } from "./Card";
 import { Player, RestrictedPlayer } from "./Player";
+import { allTiles, Tile } from "./Tile";
 
 export type GamePreview = {
   id: string;
@@ -18,6 +19,8 @@ export type RestrictedGameState = {
 
   isDrafting: boolean;
   cardsToDraft: number;
+
+  placedTiles: Record<string, Tile>;
 };
 
 export class GameState {
@@ -32,6 +35,9 @@ export class GameState {
   isDrafting: boolean = false;
   cardsToDraft: number = 0;
 
+  placedTiles: Record<string, Tile> = {};
+  tileDeck: Tile[] = JSON.parse(JSON.stringify(allTiles));
+
   actionCards: Card[] = JSON.parse(JSON.stringify(actionCards));
   epicTaleCards: Card[] = JSON.parse(JSON.stringify(epicTaleCards));
   advantageCards: Card[] = JSON.parse(JSON.stringify(actionCards));
@@ -45,6 +51,9 @@ export class GameState {
     this.actionCards = shuffle(this.actionCards);
     this.epicTaleCards = shuffle(this.epicTaleCards);
     this.setAsideCard = this.actionCards.pop();
+
+    //shuffle tiles
+    this.tileDeck = shuffle(this.tileDeck);
   }
 
   getGameInstance(playerId: string): RestrictedGameState {
@@ -61,6 +70,8 @@ export class GameState {
         })
       ),
 
+      placedTiles: this.placedTiles,
+
       isDrafting: this.isDrafting,
       cardsToDraft: this.cardsToDraft,
     };
@@ -73,6 +84,16 @@ export class GameState {
         this.players[playerId].hand.push(this.actionCards.pop()!);
       }
     }
+  }
+
+  addStartingTiles() {
+    this.placedTiles[`0,0`] = this.tileDeck.pop()!;
+    this.placedTiles[`1,0`] = this.tileDeck.pop()!;
+    this.placedTiles[`1,-1`] = this.tileDeck.pop()!;
+    this.placedTiles[`0,-1`] = this.tileDeck.pop()!;
+    this.placedTiles[`-1,0`] = this.tileDeck.pop()!;
+    this.placedTiles[`-1,1`] = this.tileDeck.pop()!;
+    this.placedTiles[`0,1`] = this.tileDeck.pop()!;
   }
 }
 
