@@ -6,23 +6,29 @@ type GameAction = {
   type: GameActionType;
   gameId: string;
   playerJWT: string;
-  data: JoinGame | DraftCards;
+  data: JoinGame | DraftCards | ChooseTerritory;
 };
 
 type JoinGame = {
   name: string;
 };
 
+type ChooseTerritory = {
+  territory: string;
+};
+
 export type DraftCards = {
-  cardsToKeep: string[] //ids of cards you are keeping
-}
+  cardsToKeep: string[]; //ids of cards you are keeping
+};
 
 enum GameActionType {
   JoinGame,
   ViewGame,
   ReadyUp,
   UnreadyUp,
-  DraftCards
+  DraftCards,
+  ChooseCapitalTerritory,
+  PlaceInitialClan,
 }
 
 export class SocketManager {
@@ -87,14 +93,38 @@ export class SocketManager {
 
       case GameActionType.DraftCards:
         const draftCards = gameAction.data as DraftCards;
-        GameManager.draftCards(playerId, gameAction.gameId, draftCards.cardsToKeep).forEach(
-          ([socketId, gameState]) => {
-            this.currentSockets[socketId].send(JSON.stringify(gameState));
-          }
-        );
+        GameManager.draftCards(
+          playerId,
+          gameAction.gameId,
+          draftCards.cardsToKeep
+        ).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+
+      case GameActionType.ChooseCapitalTerritory:
+        const chooseCapitalTerritory =
+          gameAction.data as ChooseTerritory;
+        GameManager.chooseCapitalTerritory(
+          gameAction.gameId,
+          chooseCapitalTerritory.territory
+        ).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+
+      case GameActionType.PlaceInitialClan:
+        const placeClanTurn =
+          gameAction.data as ChooseTerritory;
+        GameManager.placeInitialClan(
+          gameAction.gameId,
+          placeClanTurn.territory,
+          playerId
+        ).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
         break;
     }
-
     return null!;
   }
 }

@@ -4,6 +4,7 @@
 	import CardComponent from '$lib/components/Card.svelte';
 	import { GameActionFactory } from '$lib/types/GameActions';
 	import Hex from '$lib/components/Hex.svelte';
+	import { allTiles } from '$lib/types/Tile';
 	export let restrictedGameState: RestrictedGameState;
 	export let socket;
 	export let gameId: string;
@@ -22,6 +23,22 @@
 	const tileHeight = (tileWidth * Math.sqrt(3)) / 1.5;
 
 	let tileMapOffset = { x: 0, y: 0 }; //used for dragging around the gameboard
+
+	async function selectTile(tileId: string) {
+		if (
+			restrictedGameState.brenPickingCapital &&
+			restrictedGameState.bren == restrictedGameState.playerId
+		) {
+			await socket.send(
+				JSON.stringify(await GameActionFactory.pickCapitalTerritory(gameId, tileId))
+			);
+		} else if (
+			restrictedGameState.placeInitialClans &&
+			restrictedGameState.placeClanTurn == restrictedGameState.playerId
+		) {
+			await socket.send(JSON.stringify(await GameActionFactory.placeInitialClan(gameId, tileId)));
+		}
+	}
 </script>
 
 <!-- Render players info -->
@@ -29,7 +46,7 @@
 	{#each Object.entries(restrictedGameState.players) as [_, player]}
 		<div style:display="inline-block">
 			<!-- Player Name -->
-			<span style:margin-left="5px">{player.name}</span>
+			<span style:margin-left="5px" style:font-weight={player.id == restrictedGameState.playerId ? "bold" : "normal"}>{player.name}</span>
 			<!-- Player's Cards -->
 			<div style:margin="5px">
 				<!-- Show their actions cards -->
@@ -71,7 +88,7 @@
 						style:margin="1px"
 						style:width="5px"
 						style:height="5px"
-						style:background-color="gray"
+						style:background-color={player.color}
 					/>
 				{/each}
 			</div>
@@ -81,6 +98,12 @@
 </div>
 
 <!-- Render game tiles -->
+{#if restrictedGameState.brenPickingCapital && restrictedGameState.bren == restrictedGameState.playerId}
+	<p>Click on territory you want to be capital</p>
+{/if}
+{#if restrictedGameState.placeInitialClans && restrictedGameState.placeClanTurn == restrictedGameState.playerId}
+	<p>Choose territory to place a clan in</p>
+{/if}
 <!--TODO: make height not just 350px, but dynamic and cool-->
 <div
 	style:width={'100%'}
@@ -100,54 +123,99 @@
 		style:transform={`translate(${tileMapOffset.x}px, ${tileMapOffset.y}px)`}
 	>
 		{#each restrictedGameState.tiles as tile}
-			{#each tile.positions as { x, y }}
-				<div
-					style:position="absolute"
-					style:left={`calc(50% + ${(x * tileWidth) / 2 - (y * tileWidth) / 2}px)`}
-					style:top={`${250 - ((x * tileHeight) / 1.5 + (y * tileHeight) / 1.5)}px`}
-				>
-					<Hex width={tileWidth} color={tile.tile.color} />
-				</div>
-			{/each}
-			<!-- positioned by taking the average x position of the three tiles and average y pos of the three tiles -->
-			<div
-				style:width={`${tileWidth}px`}
-				style:height={`${tileHeight}px`}
-				style:position="absolute"
-				style:left={`calc(50% + ${((tile.positions.reduce((x, cur) => x + cur.x, 0) / 3) * tileWidth) / 2 - ((tile.positions.reduce((y, cur) => y + cur.y, 0) / 3) * tileWidth) / 2}px)`}
-				style:top={`${250 - (((tile.positions.reduce((x, cur) => x + cur.x, 0) / 3) * tileHeight) / 1.5 + ((tile.positions.reduce((y, cur) => y + cur.y, 0) / 3) * tileHeight) / 1.5)}px`}
-			>
-				<p style:text-align="center">{tile.tile.name}</p>
-				{#if tile.tile.text}
-					<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<div on:click={async () => await selectTile(tile.tileId)}>
+				{#each tile.positions as { x, y }}
 					<div
-						style:margin="auto"
-						style:width="15px"
-						style:aspect-ratio="1/1"
-						style:border="1px solid black"
-						on:mouseover={(e) => {
-							e.currentTarget.children[1].style.visibility = 'visible';
-						}}
-						on:mouseout={(e) => {
-							e.currentTarget.children[1].style.visibility = 'hidden';
-						}}
+						style:position="absolute"
+						style:left={`calc(50% + ${(x * tileWidth) / 2 - (y * tileWidth) / 2}px)`}
+						style:top={`${250 - ((x * tileHeight) / 1.5 + (y * tileHeight) / 1.5)}px`}
 					>
-						<span style:margin="auto" style:display="block" style:width="max-content">?</span>
-						<div
-							style:position="absolute"
-							style:padding="5px"
-							style:border-radius="5px"
-							style:z-index="2"
-							style:max-width={`${tileWidth * 4}px`}
-							style:width="max-content"
-							style:visibility="hidden"
-							style:border="1px solid black"
-							style:background-color={tile.tile.color}
-						>
-							<p>{tile.tile.text}</p>
-						</div>
+						<Hex width={tileWidth} color={allTiles[tile.tileId].color} />
 					</div>
-				{/if}
+				{/each}
+				<!-- positioned by taking the average x position of the three tiles and average y pos of the three tiles -->
+				<div
+					style:width={`${tileWidth}px`}
+					style:height={`${tileHeight}px`}
+					style:position="absolute"
+					style:left={`calc(50% + ${((tile.positions.reduce((x, cur) => x + cur.x, 0) / 3) * tileWidth) / 2 - ((tile.positions.reduce((y, cur) => y + cur.y, 0) / 3) * tileWidth) / 2}px)`}
+					style:top={`${250 - (((tile.positions.reduce((x, cur) => x + cur.x, 0) / 3) * tileHeight) / 1.5 + ((tile.positions.reduce((y, cur) => y + cur.y, 0) / 3) * tileHeight) / 1.5)}px`}
+				>
+					<!-- Territory data -->
+					<p style:margin="2px 0" style:text-align="center">{allTiles[tile.tileId].name}</p>
+					{#if tile.tileId == restrictedGameState.capitalTerritory}
+						<p style:font-weight="bold" style:text-align="center" style:margin="2px 0">Capital</p>
+					{/if}
+					<!--Clans -->
+					<div>
+						{#each Object.entries(tile.clans) as [playerId, numberOfClans]}
+							{#each { length: numberOfClans } as _}
+								<div
+								  style:border="1px solid black"
+									style:width="15px"
+									style:height="15px"
+									style:margin="2px"
+									style:background-color={restrictedGameState.players[playerId].color}
+									style:display="inline-block"
+								/>
+							{/each}
+						{/each}
+					</div>
+					<!-- Santuaries & citadels -->
+					<div>
+						{#each { length: tile.citadels } as _}
+							<div
+							  style:border="1px solid black"
+								style:width="20px"
+								style:height="20px"
+								style:margin="2px"
+								style:background-color="grey"
+								style:display="inline-block"
+							/>
+						{/each}
+						{#each { length: tile.sanctuaries } as _}
+							<div
+							  style:border="1px solid black"
+								style:width="20px"
+								style:height="20px"
+								style:margin="2px"
+								style:background-color="brown"
+								style:display="inline-block"
+							/>
+						{/each}
+					</div>
+					{#if allTiles[tile.tileId].text}
+						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+						<div
+							style:margin="auto"
+							style:width="15px"
+							style:aspect-ratio="1/1"
+							style:border="1px solid black"
+							on:mouseover={(e) => {
+								e.currentTarget.children[1].style.visibility = 'visible';
+							}}
+							on:mouseout={(e) => {
+								e.currentTarget.children[1].style.visibility = 'hidden';
+							}}
+						>
+							<span style:margin="auto" style:display="block" style:width="max-content">?</span>
+							<div
+								style:position="absolute"
+								style:padding="5px"
+								style:border-radius="5px"
+								style:z-index="2"
+								style:max-width={`${tileWidth * 4}px`}
+								style:width="max-content"
+								style:visibility="hidden"
+								style:border="1px solid black"
+								style:background-color={allTiles[tile.tileId].color}
+							>
+								<p>{allTiles[tile.tileId].text}</p>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</div>
 		{/each}
 	</div>
@@ -160,6 +228,7 @@
 			? 'clockwise'
 			: 'counter-clockwise'}</span
 	>
+	{#if restrictedGameState.brenPickingCapital}<p>Bren is picking capital</p>{/if}
 </div>
 
 <!-- render your cards -->

@@ -9,6 +9,7 @@ export type RestrictedPlayer = {
   advantageCards: number;
   hand: Card[];
   reserveClans: number;
+  color: string;
 };
 
 export class Player {
@@ -19,6 +20,7 @@ export class Player {
   hand: Card[] = [];
   handForDraft : Card[] = [];
   reserveClans: number = 12;
+  color: string = "";
 
   constructor(id: string, socketId: string, name: string) {
     this.id = id;
@@ -40,6 +42,7 @@ export class Player {
         (card) => card.type == CardType.Advantage
       ).length,
       hand: this.id == playerId ? this.hand : [],
+      color: this.color,
     };
   }
 }
