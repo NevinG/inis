@@ -9,4 +9,5 @@ export type RestrictedPlayer = {
   advantageCards: number;
   hand: Card[];
   reserveClans: number;
+  color: string;
 };

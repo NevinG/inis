@@ -15,12 +15,18 @@ export type DraftCards = {
   cardsToKeep: string[] //ids of cards you are keeping
 }
 
+type ChooseTerritory = {
+  territory: string;
+};
+
 enum GameActionType {
   JoinGame,
   ViewGame,
   ReadyUp,
   UnreadyUp,
-  DraftCards
+  DraftCards,
+  ChooseCapitalTerritory,
+  PlaceInitialClan,
 }
 
 export class GameActionFactory {
@@ -59,6 +65,24 @@ export class GameActionFactory {
       gameId,
       playerJWT: await getJWT(),
       data: {},
+    };
+  }
+
+  static async pickCapitalTerritory(gameId: string, territoryId: string): Promise<GameAction<ChooseTerritory>>{
+    return {
+      type: GameActionType.ChooseCapitalTerritory,
+      gameId,
+      playerJWT: await getJWT(),
+      data: {territory: territoryId},
+    };
+  }
+
+  static async placeInitialClan(gameId: string, territoryId: string): Promise<GameAction<ChooseTerritory>>{
+    return {
+      type: GameActionType.PlaceInitialClan,
+      gameId,
+      playerJWT: await getJWT(),
+      data: {territory: territoryId},
     };
   }
 

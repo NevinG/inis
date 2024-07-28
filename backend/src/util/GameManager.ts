@@ -50,7 +50,9 @@ export default class GameManager {
     if (Object.keys(game.players).length >= game.maxPlayers) {
       return [[player.socketId, game.getGameInstance(player.id)]];
     }
+    //add color to game
     game.players[player.id] = player;
+    player.color = game.getPlayerColor();
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
       game.players[playerId].socketId,
@@ -161,8 +163,6 @@ export default class GameManager {
     game.tenSecondStartingCountdown = false;
     //deal cards
     game.dealActionCards();
-    //start drafting
-    game.isDrafting = true;
     game.cardsToDraft = 1;
     //tiles
     game.addStartingTiles();
@@ -170,6 +170,8 @@ export default class GameManager {
     game.bren = Object.keys(game.players)[
       Math.floor(Math.random() * Object.keys(game.players).length)
     ];
+    //bren picks capital
+    game.brenPickingCapital = true;
 
     //send game state to all players
     Object.keys(game.players).forEach((playerId) => {
@@ -177,5 +179,47 @@ export default class GameManager {
         JSON.stringify(game.getGameInstance(playerId))
       );
     });
+  }
+
+  public static chooseCapitalTerritory(gameId: string, territoryId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    game.brenPickingCapital = false;
+    game.capitalTerritory = territoryId;
+    game.tiles.find((tile) => tile.tileId == territoryId)!.citadels++;
+    game.tiles.find((tile) => tile.tileId == territoryId)!.sanctuaries++;
+
+    //start placing initital clans
+    game.placeInitialClans = true;
+    game.placeClanTurn = game.bren;
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static placeInitialClan(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    const tile = game.tiles.find((tile) => tile.tileId == territoryId);
+    if(!(playerId in tile!.clans))
+      tile!.clans[playerId] = 0;
+    tile!.clans[playerId]++;
+    game.players[playerId].reserveClans--;
+
+    //check if all players are done placing initial clans
+    if(Object.entries(game.players).every(([_, player]) => player.reserveClans == 10)) {
+      game.placeInitialClans = false;
+      game.isDrafting = true;
+    } else { //rotate turn to next player
+      const playerKeys = Object.keys(game.players);
+      game.placeClanTurn = playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
+    }
+    
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
   }
 }

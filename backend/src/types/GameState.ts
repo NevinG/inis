@@ -1,6 +1,6 @@
 import { actionCards, advantageCards, Card, epicTaleCards } from "./Card";
 import { Player, RestrictedPlayer } from "./Player";
-import { allTiles, Tile } from "./Tile";
+import { allTiles, GameTile, Tile } from "./Tile";
 
 export type GamePreview = {
   id: string;
@@ -12,35 +12,50 @@ export type RestrictedGameState = {
   id: string;
   playerId: string;
   privacy: GamePrivacy;
-  hasStarted: boolean;
   tenSecondStartingCountdown: boolean;
   maxPlayers: number;
   players: { [playerId: string]: RestrictedPlayer };
   flockOfCrowsIsClockwise: boolean;
   bren: string;
+  capitalTerritory: string;
+
+  hasStarted: boolean;
+  brenPickingCapital: boolean;
+
+  placeInitialClans:boolean;
+  placeClanTurn: string;
+  totalInitialClansPlaced: number;
 
   isDrafting: boolean;
   cardsToDraft: number;
 
-  tiles: {tile: Tile, positions: {x: number, y: number}[]}[];
+  tiles: GameTile[];
 };
 
 export class GameState {
   id: string;
   privacy: GamePrivacy;
-  hasStarted: boolean = false;
+
   tenSecondStartingCountdown: boolean = false;
   maxPlayers: number;
   setAsideCard?: Card;
   players: { [playerId: string]: Player } = {};
   flockOfCrowsIsClockwise: boolean;
   bren: string = "";
+  capitalTerritory: string = "";
+
+  hasStarted: boolean = false;
+  brenPickingCapital: boolean = false;
+
+  placeInitialClans:boolean = false;
+  placeClanTurn: string = "";
+  totalInitialClansPlaced: number = 0;
 
   isDrafting: boolean = false;
   cardsToDraft: number = 0;
 
-  tiles: {tile: Tile, positions: {x: number, y: number}[]}[] = [];
-  tileDeck: Tile[] = JSON.parse(JSON.stringify(allTiles));
+  tiles: GameTile[] = [];
+  tileDeck: Tile[] = JSON.parse(JSON.stringify(Object.entries(allTiles).map(([_, tile]) => tile)));
 
   actionCards: Card[] = JSON.parse(JSON.stringify(actionCards));
   epicTaleCards: Card[] = JSON.parse(JSON.stringify(epicTaleCards));
@@ -68,7 +83,6 @@ export class GameState {
       id: this.id,
       playerId: playerId,
       privacy: this.privacy,
-      hasStarted: this.hasStarted,
       tenSecondStartingCountdown: this.tenSecondStartingCountdown,
       maxPlayers: this.maxPlayers,
       players: Object.fromEntries(
@@ -78,8 +92,16 @@ export class GameState {
       ),
       flockOfCrowsIsClockwise: this.flockOfCrowsIsClockwise,
       bren: this.bren,
+      capitalTerritory: this.capitalTerritory,
       
       tiles: this.tiles,
+
+      hasStarted: this.hasStarted,
+      brenPickingCapital: this.brenPickingCapital,
+
+      placeInitialClans: this.placeInitialClans,
+      placeClanTurn: this.placeClanTurn,
+      totalInitialClansPlaced: this.totalInitialClansPlaced,
 
       isDrafting: this.isDrafting,
       cardsToDraft: this.cardsToDraft,
@@ -104,8 +126,19 @@ export class GameState {
       [{x: 1, y: 1},{x: 2, y: 1},{x: 1, y: 2}],
     ]
     for(let i = 0; i < Object.keys(this.players).length; i++) {
-      this.tiles.push({tile: this.tileDeck.pop()!, positions: positions.pop()!});
+      this.tiles.push({
+        tileId: this.tileDeck.pop()?.id!, 
+        positions: positions.pop()!,
+        clans: {},
+        sanctuaries: 0,
+        citadels: 0,
+      });
     }
+  }
+
+  colors: [string, string, string, string] = ["red", "blue", "green", "pink"];
+  getPlayerColor() : string {
+    return this.colors.pop() ?? "black"; //should never be black
   }
 }
 
