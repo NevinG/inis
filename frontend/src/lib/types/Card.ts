@@ -9,7 +9,7 @@ export type Card = {
 	imageSrc?: string;
 };
 
-export type SelectableCard = (Card & {selected?: boolean});
+export type SelectableCard = (Card & {selected?: boolean, hovering?: boolean});
 
 export enum CardType {
 	EpicTale,
