@@ -18,10 +18,12 @@ export const api = {
 		return { games: games };
 	},
 	getAuth: async (): Promise<string> => {
-    const curJwt = localStorage.getItem('jwt');
-		const response = await fetch(`http://localhost:3000/api/auth?${curJwt ? `token=${curJwt}` : ''}`);
+		const curJwt = localStorage.getItem('jwt');
+		const response = await fetch(
+			`http://localhost:3000/api/auth?${curJwt ? `token=${curJwt}` : ''}`
+		);
 		const { jwt } = await response.json();
-    localStorage.setItem('jwt', jwt);
+		localStorage.setItem('jwt', jwt);
 		return jwt;
 	}
 };

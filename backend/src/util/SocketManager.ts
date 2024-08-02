@@ -6,7 +6,11 @@ type GameAction = {
   type: GameActionType;
   gameId: string;
   playerJWT: string;
-  data: JoinGame | DraftCards | ChooseTerritory;
+  data: 
+  JoinGame | 
+  DraftCards | 
+  ChooseTerritory |
+  PlayCard;
 };
 
 type JoinGame = {
@@ -17,8 +21,12 @@ type ChooseTerritory = {
   territory: string;
 };
 
-export type DraftCards = {
+type DraftCards = {
   cardsToKeep: string[]; //ids of cards you are keeping
+};
+
+type PlayCard = {
+  cardId: string;
 };
 
 enum GameActionType {
@@ -29,6 +37,9 @@ enum GameActionType {
   DraftCards,
   ChooseCapitalTerritory,
   PlaceInitialClan,
+  PlayCard,
+  Pass,
+  TakePretenderToken
 }
 
 export class SocketManager {
@@ -121,6 +132,25 @@ export class SocketManager {
           placeClanTurn.territory,
           playerId
         ).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      
+      case GameActionType.PlayCard:
+        const playCardTurn = gameAction.data as PlayCard;
+        GameManager.playCard(gameAction.gameId, playerId, playCardTurn.cardId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+
+      case GameActionType.Pass:
+        GameManager.pass(gameAction.gameId, playerId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+
+      case GameActionType.TakePretenderToken:
+        GameManager.takePretenderToken(gameAction.gameId, playerId).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
         });
         break;

@@ -118,9 +118,11 @@
 							style:aspect-ratio="1/1"
 							style:border="1px solid black"
 							on:mouseover={(e) => {
+								//@ts-expect-error style is a property of HTMLElement
 								e.currentTarget.children[1].style.visibility = 'visible';
 							}}
 							on:mouseout={(e) => {
+								//@ts-expect-error style is a property of HTMLElement
 								e.currentTarget.children[1].style.visibility = 'hidden';
 							}}
 						>

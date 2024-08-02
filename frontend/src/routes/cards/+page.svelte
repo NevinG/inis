@@ -18,4 +18,3 @@
 {#each data.advantageCards as card}
 	<CardComponent {card} />
 {/each}
-

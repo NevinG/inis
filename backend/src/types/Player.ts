@@ -1,4 +1,4 @@
-import { Card, CardType } from "./Card";
+import { actionCards, advantageCards, epicTaleCards } from "./Card";
 
 export type RestrictedPlayer = {
   id: string;
@@ -7,9 +7,10 @@ export type RestrictedPlayer = {
   epicTaleCards: number;
   actionCards: number;
   advantageCards: number;
-  hand: Card[];
+  hand: string[];
   reserveClans: number;
   color: string;
+  hasPretenderToken: boolean;
 };
 
 export class Player {
@@ -17,10 +18,11 @@ export class Player {
   socketId: string;
   name: string;
   ready: boolean = false;
-  hand: Card[] = [];
-  handForDraft : Card[] = [];
+  hand: string[] = [];
+  handForDraft: string[] = [];
   reserveClans: number = 12;
   color: string = "";
+  hasPretenderToken: boolean = false;
 
   constructor(id: string, socketId: string, name: string) {
     this.id = id;
@@ -28,21 +30,22 @@ export class Player {
     this.name = name;
   }
 
-  getPlayerInstance(playerId : string): RestrictedPlayer {
+  getPlayerInstance(playerId: string): RestrictedPlayer {
     return {
       id: this.id,
       name: this.name,
       ready: this.ready,
       reserveClans: this.reserveClans,
-      epicTaleCards: this.hand.filter((card) => card.type == CardType.EpicTale)
+      epicTaleCards: this.hand.filter((cardId) => cardId in epicTaleCards)
         .length,
-      actionCards: this.hand.filter((card) => card.type == CardType.Action)
+      actionCards: this.hand.filter((cardId) => cardId in actionCards)
         .length,
       advantageCards: this.hand.filter(
-        (card) => card.type == CardType.Advantage
+        (cardId) => (cardId in advantageCards)
       ).length,
       hand: this.id == playerId ? this.hand : [],
       color: this.color,
+      hasPretenderToken: this.hasPretenderToken,
     };
   }
 }

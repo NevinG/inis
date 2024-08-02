@@ -23,7 +23,7 @@
 </script>
 
 <h3>Players:</h3>
-{#each Object.entries(restrictedGameState.players) as [_, player]}
+{#each Object.values(restrictedGameState.players) as player}
 	<p style:font-weight={restrictedGameState.playerId === player.id ? 'bold' : 'normal'}>
 		{player.name}
 	</p>
