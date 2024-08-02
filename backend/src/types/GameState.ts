@@ -1,4 +1,4 @@
-import { actionCards, advantageCards, Card, epicTaleCards } from "./Card";
+import { actionCards, epicTaleCards } from "./Card";
 import { Player, RestrictedPlayer } from "./Player";
 import { allTiles, GameTile, Tile } from "./Tile";
 
@@ -20,14 +20,19 @@ export type RestrictedGameState = {
   capitalTerritory: string;
 
   hasStarted: boolean;
+  winner: string;
+
   brenPickingCapital: boolean;
 
-  placeInitialClans:boolean;
+  placeInitialClans: boolean;
   placeClanTurn: string;
   totalInitialClansPlaced: number;
 
   isDrafting: boolean;
   cardsToDraft: number;
+
+  isSeasonPhase: boolean;
+  seasonPhasePlayerTurn: string;
 
   tiles: GameTile[];
 };
@@ -38,28 +43,36 @@ export class GameState {
 
   tenSecondStartingCountdown: boolean = false;
   maxPlayers: number;
-  setAsideCard?: Card;
+  setAsideCard?: string;
   players: { [playerId: string]: Player } = {};
   flockOfCrowsIsClockwise: boolean;
   bren: string = "";
   capitalTerritory: string = "";
+  passCount: number = 0;
 
   hasStarted: boolean = false;
+  winner: string = ""; //if not "" then some player has won the game
+
   brenPickingCapital: boolean = false;
 
-  placeInitialClans:boolean = false;
+  placeInitialClans: boolean = false;
   placeClanTurn: string = "";
   totalInitialClansPlaced: number = 0;
 
   isDrafting: boolean = false;
   cardsToDraft: number = 0;
 
-  tiles: GameTile[] = [];
-  tileDeck: Tile[] = JSON.parse(JSON.stringify(Object.entries(allTiles).map(([_, tile]) => tile)));
+  isSeasonPhase: boolean = false;
+  seasonPhasePlayerTurn: string = "";
 
-  actionCards: Card[] = JSON.parse(JSON.stringify(actionCards));
-  epicTaleCards: Card[] = JSON.parse(JSON.stringify(epicTaleCards));
-  advantageCards: Card[] = JSON.parse(JSON.stringify(advantageCards));
+  tiles: GameTile[] = [];
+  tileDeck: Tile[] = JSON.parse(
+    JSON.stringify(Object.entries(allTiles).map(([_, tile]) => tile))
+  );
+
+  epicTaleCards: string[] = Object.values(epicTaleCards).map((card) => card.id);
+
+  discardedActionCards: string[] = [];
 
   constructor(privacy: GamePrivacy, maxPlayers: number) {
     this.maxPlayers = maxPlayers;
@@ -67,9 +80,7 @@ export class GameState {
     this.id = crypto.randomUUID();
 
     //shuffle decks of cards
-    this.actionCards = shuffle(this.actionCards);
     this.epicTaleCards = shuffle(this.epicTaleCards);
-    this.setAsideCard = this.actionCards.pop();
 
     //shuffle tiles
     this.tileDeck = shuffle(this.tileDeck);
@@ -93,10 +104,11 @@ export class GameState {
       flockOfCrowsIsClockwise: this.flockOfCrowsIsClockwise,
       bren: this.bren,
       capitalTerritory: this.capitalTerritory,
-      
+
       tiles: this.tiles,
 
       hasStarted: this.hasStarted,
+      winner: this.winner,
       brenPickingCapital: this.brenPickingCapital,
 
       placeInitialClans: this.placeInitialClans,
@@ -105,14 +117,20 @@ export class GameState {
 
       isDrafting: this.isDrafting,
       cardsToDraft: this.cardsToDraft,
+
+      isSeasonPhase: this.isSeasonPhase,
+      seasonPhasePlayerTurn: this.seasonPhasePlayerTurn,
     };
   }
 
   dealActionCards() {
-    this.actionCards = shuffle(JSON.parse(JSON.stringify(this.actionCards)));
-    while (this.actionCards.length > 0) {
+    const shuffledActionCards = shuffle(Object.values(actionCards).map((card) => card.id));
+    this.setAsideCard = shuffledActionCards.pop();
+    this.cardsToDraft = 1;
+
+    while (shuffledActionCards.length > 0) {
       for (let playerId in this.players) {
-        this.players[playerId].hand.push(this.actionCards.pop()!);
+        this.players[playerId].hand.push(shuffledActionCards.pop()!);
       }
     }
   }
@@ -120,14 +138,30 @@ export class GameState {
   addStartingTiles() {
     //first starting tile
     const positions = [
-      [{x: 0, y: 0},{x: 1, y: -1},{x: 1, y: 0}],
-      [{x: 2, y: -1},{x: 3, y: -2},{x: 2, y: -2}],
-      [{x: 2, y: 0},{x: 3, y: -1},{x: 3, y: 0}],
-      [{x: 1, y: 1},{x: 2, y: 1},{x: 1, y: 2}],
-    ]
-    for(let i = 0; i < Object.keys(this.players).length; i++) {
+      [
+        { x: 0, y: 0 },
+        { x: 1, y: -1 },
+        { x: 1, y: 0 },
+      ],
+      [
+        { x: 2, y: -1 },
+        { x: 3, y: -2 },
+        { x: 2, y: -2 },
+      ],
+      [
+        { x: 2, y: 0 },
+        { x: 3, y: -1 },
+        { x: 3, y: 0 },
+      ],
+      [
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+        { x: 1, y: 2 },
+      ],
+    ];
+    for (let i = 0; i < Object.keys(this.players).length; i++) {
       this.tiles.push({
-        tileId: this.tileDeck.pop()?.id!, 
+        tileId: this.tileDeck.pop()?.id!,
         positions: positions.pop()!,
         clans: {},
         sanctuaries: 0,
@@ -137,7 +171,7 @@ export class GameState {
   }
 
   colors: [string, string, string, string] = ["red", "blue", "green", "pink"];
-  getPlayerColor() : string {
+  getPlayerColor(): string {
     return this.colors.pop() ?? "black"; //should never be black
   }
 }

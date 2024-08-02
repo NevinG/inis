@@ -29,9 +29,9 @@
 
 {#if restrictedGameState !== undefined && restrictedGameState !== null}
 	{#if restrictedGameState.hasStarted}
-		<Game restrictedGameState={restrictedGameState} gameId={data.id} socket={socket}/>
+		<Game {restrictedGameState} gameId={data.id} {socket} />
 	{:else}
-		<GameLobby restrictedGameState={restrictedGameState} gameId={data.id} socket={socket} />
+		<GameLobby {restrictedGameState} gameId={data.id} {socket} />
 	{/if}
 {:else}
 	<p>This Game Doesn't Exist</p>

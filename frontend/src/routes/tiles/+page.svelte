@@ -5,6 +5,6 @@
 
 <a href="/">back</a>
 <h1>Tiles</h1>
-{#each data.tiles as tile}
-	<Hex/>
+{#each data.tiles as _tile}
+	<Hex />
 {/each}

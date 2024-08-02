@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CardType, type Card, type SelectableCard } from '$lib/types/Card';
+	import { CardType, type SelectableCard } from '$lib/types/Card';
 	import SeasonSymbol from './SeasonSymbol.svelte';
 	import TriskalSymbol from './TriskalSymbol.svelte';
 	export let card: SelectableCard;
@@ -31,7 +31,7 @@
 		style:margin="auto"
 		height="20%"
 	/>
-	<br/>
+	<br />
 
 	<div style:display="flex" style:justify-content="center" style:align-items="center">
 		{#if hovering}

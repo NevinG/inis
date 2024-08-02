@@ -1,7 +1,15 @@
 <script lang="ts">
 	export let width = 180;
-	export let color = "green";
+	export let color = 'green';
 </script>
+
+<div
+	style:width={`${width}px`}
+	style:background={color}
+	style:border={`.1px solid ${color}`}
+	class="hex"
+/>
+
 <style>
 	.hex {
 		aspect-ratio: cos(30deg);
@@ -9,9 +17,3 @@
 		position: absolute;
 	}
 </style>
-<div 
-  style:width={`${width}px`} 
-	style:background={color}
-	style:border={`.1px solid ${color}`}
-	class="hex" 
-	/>
