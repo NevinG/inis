@@ -49,7 +49,7 @@
 	style:display="flex"
 	style:justify-content="center"
 	style:align-items="end"
-	style:gap="3px"
+	style:gap="2px"
 >
 	{#each myActionCards as actionCard}
 		<!-- svelte-ignore a11y-click-events-have-key-events -->

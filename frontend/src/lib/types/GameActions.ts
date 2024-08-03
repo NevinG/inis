@@ -33,7 +33,9 @@ enum GameActionType {
 	PlaceInitialClan,
 	PlayCard,
 	Pass,
-	TakePretenderToken
+	TakePretenderToken,
+
+	SanctuaryActionCard
 }
 
 export class GameActionFactory {
@@ -136,6 +138,20 @@ export class GameActionFactory {
 			gameId,
 			playerJWT: await getJWT(),
 			data: {}
+		};
+	}
+
+	static async sanctuaryActionCard(
+		gameId: string,
+		tileId: string
+	): Promise<GameAction<ChooseTerritory>> {
+		return {
+			type: GameActionType.SanctuaryActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				territory: tileId
+			}
 		};
 	}
 }

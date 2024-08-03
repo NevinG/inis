@@ -32,6 +32,7 @@ export type RestrictedGameState = {
 
 	isSeasonPhase: boolean;
 	seasonPhasePlayerTurn: string;
+	currentlyPlayingCard: string;
 
 	tiles: GameTile[];
 };

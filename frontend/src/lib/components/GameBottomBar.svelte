@@ -7,6 +7,7 @@
 	export let restrictedGameState: RestrictedGameState;
 	export let socket: WebSocket;
 	export let gameId: string;
+	export let interactive: boolean = true;
 
 	$: myCards = restrictedGameState.players[restrictedGameState.playerId].hand.map(
 		(cardId) => actionCards[cardId] ?? advantageCards[cardId] ?? epicTaleCards[cardId]
@@ -19,9 +20,10 @@
 	style:display="flex"
 	style:justify-content="center"
 	style:align-items="center"
+	style:z-index="2"
 >
 	<PlayerCards {restrictedGameState} {socket} {gameId}></PlayerCards>
-	{#if restrictedGameState.isSeasonPhase && restrictedGameState.playerId == restrictedGameState.seasonPhasePlayerTurn}
+	{#if restrictedGameState.isSeasonPhase && restrictedGameState.playerId == restrictedGameState.seasonPhasePlayerTurn && interactive}
 		<div style:padding="5px">
 			<button
 				on:click={async () => {
