@@ -1,31 +1,17 @@
 <script lang="ts">
-	import { GameActionFactory } from '$lib/types/GameActions';
 	import type { RestrictedGameState } from '$lib/types/GameState';
-	import { allTiles } from '$lib/types/Tile';
+	import { allTiles, type GameTile } from '$lib/types/Tile';
 	import Hex from './Hex.svelte';
 
 	export let restrictedGameState: RestrictedGameState;
-	export let socket: WebSocket;
-	export let gameId: string;
+	$: gameTiles = restrictedGameState.tiles as (GameTile & { selected: boolean })[];
 
 	const tileWidth = 90;
 	const tileHeight = (tileWidth * Math.sqrt(3)) / 1.5;
 
 	let tileMapOffset = { x: 0, y: 0 }; //used for dragging around the gameboard
 
-	async function selectTile(tileId: string) {
-		if (
-			restrictedGameState.brenPickingCapital &&
-			restrictedGameState.bren == restrictedGameState.playerId
-		) {
-			socket.send(JSON.stringify(await GameActionFactory.pickCapitalTerritory(gameId, tileId)));
-		} else if (
-			restrictedGameState.placeInitialClans &&
-			restrictedGameState.placeClanTurn == restrictedGameState.playerId
-		) {
-			socket.send(JSON.stringify(await GameActionFactory.placeInitialClan(gameId, tileId)));
-		}
-	}
+	export let selectTile: (tileId: string) => Promise<void>;
 </script>
 
 <!--TODO: make height not just 350px, but dynamic and cool-->
@@ -47,9 +33,12 @@
 		style:cursor="move"
 		style:transform={`translate(${tileMapOffset.x}px, ${tileMapOffset.y}px)`}
 	>
-		{#each restrictedGameState.tiles as tile}
+		{#each gameTiles as tile}
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<div on:click={async () => await selectTile(tile.tileId)}>
+			<div
+				on:click={async () => await selectTile(tile.tileId)}
+				style:opacity={tile.selected ? 0.5 : 1}
+			>
 				{#each tile.positions as { x, y }}
 					<div
 						style:position="absolute"

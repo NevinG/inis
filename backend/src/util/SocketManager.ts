@@ -30,16 +30,18 @@ type PlayCard = {
 };
 
 enum GameActionType {
-  JoinGame,
-  ViewGame,
-  ReadyUp,
-  UnreadyUp,
-  DraftCards,
-  ChooseCapitalTerritory,
-  PlaceInitialClan,
-  PlayCard,
-  Pass,
-  TakePretenderToken
+	JoinGame,
+	ViewGame,
+	ReadyUp,
+	UnreadyUp,
+	DraftCards,
+	ChooseCapitalTerritory,
+	PlaceInitialClan,
+	PlayCard,
+	Pass,
+	TakePretenderToken,
+
+	SanctuaryActionCard
 }
 
 export class SocketManager {
@@ -151,6 +153,12 @@ export class SocketManager {
 
       case GameActionType.TakePretenderToken:
         GameManager.takePretenderToken(gameAction.gameId, playerId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.SanctuaryActionCard:
+        const sanctuaryActionCard = gameAction.data as ChooseTerritory;
+        GameManager.playSanctuaryActionCard(gameAction.gameId, sanctuaryActionCard.territory, playerId).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
         });
         break;

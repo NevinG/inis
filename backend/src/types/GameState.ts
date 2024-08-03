@@ -33,6 +33,7 @@ export type RestrictedGameState = {
 
   isSeasonPhase: boolean;
   seasonPhasePlayerTurn: string;
+  currentlyPlayingCard: string;
 
   tiles: GameTile[];
 };
@@ -64,6 +65,7 @@ export class GameState {
 
   isSeasonPhase: boolean = false;
   seasonPhasePlayerTurn: string = "";
+  currentlyPlayingCard: string = ""; //id of card currently playing
 
   tiles: GameTile[] = [];
   tileDeck: Tile[] = JSON.parse(
@@ -120,6 +122,7 @@ export class GameState {
 
       isSeasonPhase: this.isSeasonPhase,
       seasonPhasePlayerTurn: this.seasonPhasePlayerTurn,
+      currentlyPlayingCard: this.currentlyPlayingCard,
     };
   }
 

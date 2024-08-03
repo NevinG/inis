@@ -301,14 +301,27 @@ export default class GameManager {
     const game = this.currentGames[gameId];
     const player = game.players[playerId];
 
-    game.passCount = 0; //TODO: make game.passCount = 0 on pretender token take
+    game.passCount = 0;
 
     //remove card from player hand and add to discarded pile
     player.hand = player.hand.filter((card) => card != cardId);
     game.discardedActionCards.push(cardId);
 
     //play card
-    //TODO: make the card playable
+    game.currentlyPlayingCard = cardId; //this tells the game that the card is being played. Next response received will include card manuever
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  private static playedCardManuever(gameId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+
+    //remove card manuever
+    game.currentlyPlayingCard = "";
 
     //next person's turn TODO: use flock of crows in this
     const playerKeys = Object.keys(game.players);
@@ -320,6 +333,18 @@ export default class GameManager {
       game.players[playerId].socketId,
       game.getGameInstance(playerId),
     ]);
+  }
+
+  public static playSanctuaryActionCard(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add sanctuary to that territory
+    game.tiles.find((tile) => tile.tileId == territoryId)!.sanctuaries++;
+
+    //add epic tale card to player's hand
+    game.players[playerId].hand.push(game.epicTaleCards.pop()!);
+
+    //return to all players in game
+    return this.playedCardManuever(gameId, playerId);
   }
 
   public static pass(gameId: string, playerId: string): [string, RestrictedGameState][] {

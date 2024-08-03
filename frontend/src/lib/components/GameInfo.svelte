@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { actionCards, advantageCards, epicTaleCards } from '$lib/types/Card';
 	import type { RestrictedGameState } from '$lib/types/GameState';
 
 	export let restrictedGameState: RestrictedGameState;
@@ -50,6 +51,13 @@
 			: 'counter-clockwise'}</span
 	>
 	{#if restrictedGameState.brenPickingCapital}<p>Bren is picking capital</p>{/if}
+	{#if restrictedGameState.currentlyPlayingCard}<p>
+			{restrictedGameState.players[restrictedGameState.seasonPhasePlayerTurn].name} played {(
+				actionCards[restrictedGameState.currentlyPlayingCard] ??
+				advantageCards[restrictedGameState.currentlyPlayingCard] ??
+				epicTaleCards[restrictedGameState.currentlyPlayingCard]
+			).name}
+		</p>{/if}
 </div>
 
 <style>
