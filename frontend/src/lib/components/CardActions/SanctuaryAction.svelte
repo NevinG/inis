@@ -19,7 +19,8 @@
 		} else {
 			//unselect all tiles
 			gameTiles.forEach((tile) => (tile.selected = false));
-			tile!.selected = true;
+			if(tile?.clans[restrictedGameState.playerId] ?? 0 > 0)
+				tile!.selected = true;
 		}
 		restrictedGameState = restrictedGameState;
 	}

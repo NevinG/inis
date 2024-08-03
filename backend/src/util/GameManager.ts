@@ -309,6 +309,12 @@ export default class GameManager {
 
     //play card
     game.currentlyPlayingCard = cardId; //this tells the game that the card is being played. Next response received will include card manuever
+    
+    //if no manuever just play the card
+    switch(game.currentlyPlayingCard){
+      case "1": 
+        return this.playBardSeasonActionCard(gameId, playerId);
+    }
 
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
@@ -344,6 +350,14 @@ export default class GameManager {
     game.players[playerId].hand.push(game.epicTaleCards.pop()!);
 
     //return to all players in game
+    return this.playedCardManuever(gameId, playerId);
+  }
+
+  private static playBardSeasonActionCard(gameId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add epic tale card to player's hand
+    game.players[playerId].hand.push(game.epicTaleCards.pop()!);
+
     return this.playedCardManuever(gameId, playerId);
   }
 

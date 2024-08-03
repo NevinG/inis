@@ -41,7 +41,7 @@ enum GameActionType {
 	Pass,
 	TakePretenderToken,
 
-	SanctuaryActionCard
+	SanctuaryActionCard,
 }
 
 export class SocketManager {
