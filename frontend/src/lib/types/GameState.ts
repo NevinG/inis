@@ -34,6 +34,9 @@ export type RestrictedGameState = {
 	seasonPhasePlayerTurn: string;
 	currentlyPlayingCard: string;
 
+	//extra info passed based on currentlyPlayingCard
+	discardedCards: string[]; //for druid card
+
 	tiles: GameTile[];
 };
 

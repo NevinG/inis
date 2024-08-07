@@ -1,4 +1,4 @@
-import { actionCards, advantageCards } from "../types/Card";
+import { actionCards, advantageCards, epicTaleCards } from "../types/Card";
 import {
   GamePreview,
   GamePrivacy,
@@ -7,7 +7,7 @@ import {
 } from "../types/GameState";
 import { Player } from "../types/Player";
 import { allTiles, GameTile } from "../types/Tile";
-import { SocketManager } from "./SocketManager";
+import { NewTile, SocketManager } from "./SocketManager";
 
 export default class GameManager {
   static currentGames: { [gameId: string]: GameState } = {};
@@ -273,6 +273,7 @@ export default class GameManager {
     //remove old advantage cards
     Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => !(cardId in advantageCards)));
     //get new advantage cards
+    game.discardedAdvantageCards = [];
     game.tiles.forEach((tile) => {
       const chieftanOfTile = this.getChiefton(tile);
       if (chieftanOfTile != "") {
@@ -287,10 +288,15 @@ export default class GameManager {
     //5. Deal action cards
     //remove old action cards
     Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => !(cardId in actionCards)));
+    game.discardedActionCards = [];
     game.dealActionCards();
 
     //6. Action card draft
     game.isDrafting = true;
+
+    //other stuff
+    //remove festival from all tiles
+    game.tiles.forEach((tile) => tile.festival = false);
   }
 
   public static playCard(
@@ -305,7 +311,6 @@ export default class GameManager {
 
     //remove card from player hand and add to discarded pile
     player.hand = player.hand.filter((card) => card != cardId);
-    game.discardedActionCards.push(cardId);
 
     //play card
     game.currentlyPlayingCard = cardId; //this tells the game that the card is being played. Next response received will include card manuever
@@ -323,11 +328,22 @@ export default class GameManager {
     ]);
   }
 
-  private static playedCardManuever(gameId: string, playerId: string): [string, RestrictedGameState][] {
+  private static playedCardManuever(gameId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
 
     //remove card manuever
     game.currentlyPlayingCard = "";
+
+    //add card to discard pile
+    if(cardId in actionCards) {
+      game.discardedActionCards.push(cardId);
+    }
+    else if (cardId in advantageCards) {
+      game.discardedAdvantageCards.push(cardId);
+    }
+    else if (cardId in epicTaleCards) {
+      game.discardedEpicTaleCards.push(cardId);
+    }
 
     //next person's turn TODO: use flock of crows in this
     const playerKeys = Object.keys(game.players);
@@ -350,7 +366,7 @@ export default class GameManager {
     game.players[playerId].hand.push(game.epicTaleCards.pop()!);
 
     //return to all players in game
-    return this.playedCardManuever(gameId, playerId);
+    return this.playedCardManuever(gameId, playerId, "12");
   }
 
   private static playBardSeasonActionCard(gameId: string, playerId: string): [string, RestrictedGameState][] {
@@ -358,7 +374,101 @@ export default class GameManager {
     //add epic tale card to player's hand
     game.players[playerId].hand.push(game.epicTaleCards.pop()!);
 
-    return this.playedCardManuever(gameId, playerId);
+    return this.playedCardManuever(gameId, playerId, "1");
+  }
+
+  public static playCitadelActionCard(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add citadel to that territory
+    game.tiles.find((tile) => tile.tileId == territoryId)!.citadels++;
+    //add that advantage card to player's hand if it hasn't been played
+    Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => cardId != allTiles[territoryId].advantageCard));
+    if(!game.discardedAdvantageCards.find(cardId => cardId == allTiles[territoryId].advantageCard)){
+      game.players[playerId].hand.push(allTiles[territoryId].advantageCard);
+    }
+
+    return this.playedCardManuever(gameId, playerId, "2");
+  }
+
+  public static playMoveClansCard(gameId: string, moveClans: {from: string, to: string, numClans: number}[], playerId: string, cardId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //move clans
+    moveClans.forEach(move => {
+      const fromTile = game.tiles.find(tile => tile.tileId == move.from);
+      const toTile = game.tiles.find(tile => tile.tileId == move.to);
+
+      //add zero clans if player doesn't exist in the clan object
+      if(!(playerId in fromTile!.clans)) fromTile!.clans[playerId] = 0;
+      if(!(playerId in toTile!.clans)) toTile!.clans[playerId] = 0;
+
+      fromTile!.clans[playerId] -= move.numClans;
+      toTile!.clans[playerId] += move.numClans;
+
+      //TODO INITIATE CLASHES
+    });
+
+    return this.playedCardManuever(gameId, playerId, cardId);
+  }
+
+  public static playAddClansCard(gameId: string, action: {territory: string, numClans: number}[], playerId: string, cardId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add clans to territory
+    action.forEach(action => {
+      const tile = game.tiles.find(tile => tile.tileId == action.territory);
+      if(!(playerId in tile!.clans)) tile!.clans[playerId] = 0;
+      tile!.clans[playerId] += action.numClans;
+    });
+
+    return this.playedCardManuever(gameId, playerId, cardId);
+  }
+
+  public static playDruidCard(gameId: string, discardedCardId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add card to player's hand
+    game.players[playerId].hand.push(discardedCardId);
+    //remove card from discarded pile
+    game.discardedActionCards = game.discardedActionCards.filter(cardId => cardId != discardedCardId);
+    return this.playedCardManuever(gameId, playerId, cardId);
+  }
+
+  public static playExplorationCard(gameId: string, tiles: NewTile, cardId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    game.players[game.seasonPhasePlayerTurn].reserveClans--;
+    const gameTile : GameTile = {
+      tileId: game.tileDeck.pop()!.id,
+      positions: Object.values(tiles),
+      clans: {},
+      sanctuaries: 0,
+      citadels: 0,
+      festival: false
+    };
+    gameTile.clans[game.seasonPhasePlayerTurn] = 1; //add initial clan to this territory
+    game.tiles.push(gameTile);
+
+    return this.playedCardManuever(gameId, game.seasonPhasePlayerTurn, cardId);
+  }
+
+  public static playFestivalCard(gameId: string, tileId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add clan to that territory
+    const tile = game.tiles.find((tile) => tile.tileId == tileId)
+    tile!.clans[playerId] = (tile!.clans[playerId] ?? 0) + 1;
+    //add festival to that territory
+    game.tiles.find((tile) => tile.tileId == tileId)!.festival = true;
+
+    return this.playedCardManuever(gameId, playerId, cardId);
+  }
+
+  public static playNewAllianceCard(gameId: string, newAlliance: {territory: string, opponent: string}, playerId: string, cardId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    //add clan to that territory and remove from one opponent if opponent is specifies
+    const tile = game.tiles.find((tile) => tile.tileId == newAlliance.territory);
+    tile!.clans[playerId] = (tile!.clans[playerId] ?? 0) + 1;
+    if(newAlliance.opponent != ""){
+      tile!.clans[newAlliance.opponent] -= 1;
+    }
+    
+    return this.playedCardManuever(gameId, playerId, cardId);
   }
 
   public static pass(gameId: string, playerId: string): [string, RestrictedGameState][] {

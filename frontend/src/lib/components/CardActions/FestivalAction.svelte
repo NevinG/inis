@@ -19,7 +19,8 @@
 		} else {
 			//unselect all tiles
 			gameTiles.forEach((tile) => (tile.selected = false));
-			if (tile?.clans[restrictedGameState.playerId] ?? 0 > 0) tile!.selected = true;
+			if ((tile?.clans[restrictedGameState.playerId] ?? 0 > 0) && tile!.sanctuaries > 0)
+				tile!.selected = true;
 		}
 		restrictedGameState = restrictedGameState;
 	}
@@ -37,12 +38,12 @@
 	style:justify-content="center"
 	style:align-items="center"
 >
-	<span>Choose territory to place sanctuary in.</span>&nbsp;
+	<span>Choose territory to put the festival token in.</span>&nbsp;
 	<button
 		disabled={!selectedTile}
 		on:click={async () => {
 			socket.send(
-				JSON.stringify(await GameActionFactory.sanctuaryActionCard(gameId, selectedTile.tileId))
+				JSON.stringify(await GameActionFactory.festivalActionCard(gameId, selectedTile.tileId))
 			);
 		}}
 		style:height="25px">Submit</button

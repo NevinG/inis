@@ -11,7 +11,7 @@
 	export let socket: WebSocket;
 	export let gameId: string;
 
-	export async function selectTile(tileId: string) {
+	async function selectTile(tileId: string) {
 		const tile = gameTiles.find((tile) => tile.tileId == tileId);
 
 		if (tile!.selected) {
@@ -37,12 +37,12 @@
 	style:justify-content="center"
 	style:align-items="center"
 >
-	<span>Choose territory to place sanctuary in.</span>&nbsp;
+	<span>Choose territory to place citadel in.</span>&nbsp;
 	<button
 		disabled={!selectedTile}
 		on:click={async () => {
 			socket.send(
-				JSON.stringify(await GameActionFactory.sanctuaryActionCard(gameId, selectedTile.tileId))
+				JSON.stringify(await GameActionFactory.citadelActionCard(gameId, selectedTile.tileId))
 			);
 		}}
 		style:height="25px">Submit</button
