@@ -35,6 +35,9 @@ export type RestrictedGameState = {
   seasonPhasePlayerTurn: string;
   currentlyPlayingCard: string;
 
+  //extra info passed based on currentlyPlayingCard
+  discardedCards: string[]; //for druid card 
+
   tiles: GameTile[];
 };
 
@@ -75,6 +78,8 @@ export class GameState {
   epicTaleCards: string[] = Object.values(epicTaleCards).map((card) => card.id);
 
   discardedActionCards: string[] = [];
+  discardedAdvantageCards: string[] = [];
+  discardedEpicTaleCards: string[] = [];
 
   constructor(privacy: GamePrivacy, maxPlayers: number) {
     this.maxPlayers = maxPlayers;
@@ -123,6 +128,8 @@ export class GameState {
       isSeasonPhase: this.isSeasonPhase,
       seasonPhasePlayerTurn: this.seasonPhasePlayerTurn,
       currentlyPlayingCard: this.currentlyPlayingCard,
+
+      discardedCards: this.currentlyPlayingCard == "5" && playerId == this.seasonPhasePlayerTurn ? this.discardedActionCards : [], //if druid is being played return discardedActionCards
     };
   }
 
@@ -169,6 +176,7 @@ export class GameState {
         clans: {},
         sanctuaries: 0,
         citadels: 0,
+        festival: false,
       });
     }
   }

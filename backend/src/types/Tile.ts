@@ -12,6 +12,7 @@ export type GameTile = {
   clans: Record<string, number>,
   sanctuaries: number,
   citadels: number,
+  festival: boolean
 }
 
 export const allTiles : Record<string, Tile> = {

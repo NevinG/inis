@@ -1,32 +1,18 @@
 <script lang="ts">
 	import { GameActionFactory } from '$lib/types/GameActions';
 	import type { RestrictedGameState } from '$lib/types/GameState';
-	import type { GameTile } from '$lib/types/Tile';
 	import GameBottomBar from '../GameBottomBar.svelte';
 	import GameMap from '../GameMap.svelte';
 	export let restrictedGameState: RestrictedGameState;
-	$: gameTiles = restrictedGameState.tiles as (GameTile & { selected: boolean })[];
-	$: selectedTile = gameTiles.filter((tile) => tile.selected)[0];
 
 	export let socket: WebSocket;
 	export let gameId: string;
 
-	export async function selectTile(tileId: string) {
-		const tile = gameTiles.find((tile) => tile.tileId == tileId);
-
-		if (tile!.selected) {
-			tile!.selected = false;
-		} else {
-			//unselect all tiles
-			gameTiles.forEach((tile) => (tile.selected = false));
-			if (tile?.clans[restrictedGameState.playerId] ?? 0 > 0) tile!.selected = true;
-		}
-		restrictedGameState = restrictedGameState;
-	}
+	let newTileParts: { x: number; y: number }[] = [];
 </script>
 
 <div style:width="100%" style:height="65%">
-	<GameMap {restrictedGameState} {selectTile} />
+	<GameMap {restrictedGameState} displayPossibleNewTiles={true} bind:newTileParts />
 </div>
 <div
 	style:width="-webkit-fill-available"
@@ -37,12 +23,27 @@
 	style:justify-content="center"
 	style:align-items="center"
 >
-	<span>Choose territory to place sanctuary in.</span>&nbsp;
+	<span>Choose where the new tile is going to be placed</span>&nbsp;
+	{#if newTileParts.length > 0}
+		<button
+			style:height="25px"
+			style:margin-right="5px"
+			on:click={() => {
+				newTileParts.pop();
+				newTileParts = newTileParts;
+			}}>Back</button
+		>
+	{/if}
 	<button
-		disabled={!selectedTile}
 		on:click={async () => {
 			socket.send(
-				JSON.stringify(await GameActionFactory.sanctuaryActionCard(gameId, selectedTile.tileId))
+				JSON.stringify(
+					await GameActionFactory.explorationActionCard(gameId, {
+						0: newTileParts[0],
+						1: newTileParts[1],
+						2: newTileParts[2]
+					})
+				)
 			);
 		}}
 		style:height="25px">Submit</button

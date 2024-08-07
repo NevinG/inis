@@ -23,6 +23,28 @@ type PlayCard = {
 	cardId: string;
 };
 
+type MoveClans = {
+	from: string;
+	to: string;
+	numClans: number;
+}[];
+
+type AddClans = {
+	territory: string;
+	numClans: number;
+}[];
+
+type NewTile = {
+	0: { x: number; y: number };
+	1: { x: number; y: number };
+	2: { x: number; y: number };
+};
+
+type NewAlliance = {
+	territory: string;
+	opponent: string;
+};
+
 enum GameActionType {
 	JoinGame,
 	ViewGame,
@@ -35,7 +57,16 @@ enum GameActionType {
 	Pass,
 	TakePretenderToken,
 
-	SanctuaryActionCard
+	SanctuaryActionCard,
+	CitadelActionCard,
+	ConquestActionCard,
+	CraftsmanAndPeasantsActionCard,
+	DruidActionCard,
+	ExplorationActionCard,
+	FestivalActionCard,
+	MigrationActionCard,
+	NewAllianceActionCard,
+	NewClansActionCard
 }
 
 export class GameActionFactory {
@@ -152,6 +183,114 @@ export class GameActionFactory {
 			data: {
 				territory: tileId
 			}
+		};
+	}
+
+	static async citadelActionCard(
+		gameId: string,
+		tileId: string
+	): Promise<GameAction<ChooseTerritory>> {
+		return {
+			type: GameActionType.CitadelActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				territory: tileId
+			}
+		};
+	}
+
+	static async conquestActionCard(
+		gameId: string,
+		clanMoves: MoveClans
+	): Promise<GameAction<MoveClans>> {
+		return {
+			type: GameActionType.ConquestActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: clanMoves
+		};
+	}
+
+	static async craftsmenAndPeasantsActionCard(
+		gameId: string,
+		addClans: AddClans
+	): Promise<GameAction<AddClans>> {
+		return {
+			type: GameActionType.CraftsmanAndPeasantsActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: addClans
+		};
+	}
+
+	static async druidActionCard(gameId: string, cardId: string): Promise<GameAction<PlayCard>> {
+		return {
+			type: GameActionType.DruidActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: { cardId: cardId }
+		};
+	}
+
+	static async explorationActionCard(
+		gameId: string,
+		newTile: NewTile
+	): Promise<GameAction<NewTile>> {
+		return {
+			type: GameActionType.ExplorationActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: newTile
+		};
+	}
+
+	static async festivalActionCard(
+		gameId: string,
+		territoryId: string
+	): Promise<GameAction<ChooseTerritory>> {
+		return {
+			type: GameActionType.FestivalActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: { territory: territoryId }
+		};
+	}
+
+	static async migrationActionCard(
+		gameId: string,
+		clanMoves: MoveClans
+	): Promise<GameAction<MoveClans>> {
+		return {
+			type: GameActionType.MigrationActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: clanMoves
+		};
+	}
+
+	static async newAllianceActionCard(
+		gameId: string,
+		territory: string,
+		opponent: string
+	): Promise<GameAction<NewAlliance>> {
+		return {
+			type: GameActionType.NewAllianceActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: { territory, opponent }
+		};
+	}
+
+	static async newClansActionCard(
+		gameId: string,
+		addClans: AddClans
+	): Promise<GameAction<AddClans>> {
+		return {
+			type: GameActionType.NewClansActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: addClans
 		};
 	}
 }

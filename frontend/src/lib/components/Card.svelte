@@ -5,6 +5,7 @@
 	export let card: SelectableCard;
 	export let height: string = '200px';
 	export let hovering: boolean = false;
+	export let selected: boolean = false; //alternate way to make card selected
 </script>
 
 <div
@@ -20,7 +21,7 @@
 			: card.type == CardType.EpicTale
 				? '#ffe6e6'
 				: ''}
-	style:border-width={card.selected ? '3px' : '1px'}
+	style:border-width={card.selected || selected ? '3px' : '1px'}
 	style:overflow="hidden"
 >
 	<h3 style:text-align="center" style:margin-top="0">{card.name}</h3>
