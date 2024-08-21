@@ -17,7 +17,14 @@ export type RestrictedGameState = {
   flockOfCrowsIsClockwise: boolean;
   bren: string;
   capitalTerritory: string;
-  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string};
+  clashes: {
+    instigatorId: string;
+    territories: string[];
+    currentlyResolvingTerritory: string;
+    playerTurn: string;
+    attackedPlayer: string;
+    votedToResolve: string[];
+  };
 
   hasStarted: boolean;
   winner: string;

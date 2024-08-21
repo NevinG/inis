@@ -80,6 +80,7 @@ enum GameActionType {
   ChooseClashingTerritory,
   ClashAttack,
   ClashAttackResponse,
+  ClashResolveVote,
 
 	SanctuaryActionCard,
   CitadelActionCard,
@@ -220,6 +221,11 @@ export class SocketManager {
       case GameActionType.ClashAttackResponse:
         const clashAttackResponse = gameAction.data as ClashAttackResponse;
         GameManager.clashAttackResponse(gameAction.gameId, playerId, clashAttackResponse).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.ClashResolveVote:
+        GameManager.clashResolveVote(gameAction.gameId, playerId).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
         });
         break;

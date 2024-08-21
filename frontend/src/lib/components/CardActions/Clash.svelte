@@ -60,12 +60,23 @@
 			<br> 
 			{restrictedGameState.clashes.instigatorId != restrictedGameState.playerId ? restrictedGameState.players[restrictedGameState.clashes.playerTurn].name  + " turn" : ""}
 		</span>&nbsp;
+		{#if restrictedGameState.tiles.find(tile => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)?.clans[restrictedGameState.playerId] ?? 0 > 0}
+		<button
+		    disabled = {restrictedGameState.clashes.votedToResolve.indexOf(restrictedGameState.playerId) != -1}
+			  on:click = {async () => {
+					socket.send(
+						JSON.stringify(await GameActionFactory.clashResolveVote(gameId))
+					);
+				}}
+			>
+				Vote For Resolution ({restrictedGameState.clashes.votedToResolve.length}/{Object.values(restrictedGameState.tiles.find(tile => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)?.clans ?? []).filter(val => val > 0).length})
+			</button>&nbsp;
+		{/if}
 		{#if restrictedGameState.clashes.attackedPlayer && restrictedGameState.clashes.attackedPlayer == restrictedGameState.playerId}
 			<button on:click={async () => {
 				socket.send(JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, true, "")));
 			}}>Remove Clan</button>&nbsp;
-			<button on:click={async () => { //TODO: test if I need this line or if it does anything
-				myCards = myCards;
+			<button on:click={async () => {
 				const selectedCard = myCards.find(card => card.selected)?.id;
 				if(selectedCard)
 					socket.send(JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, false, selectedCard)));
@@ -90,7 +101,7 @@
 			<button>Withdraw</button>&nbsp;
 			{/if}
 			{#if !choseAttack}
-			<button>Epic Tale Manuever</button>
+			<button>Epic Tale Manuever</button>&nbsp;
 			{/if}
 		{/if}
 	{/if}

@@ -68,7 +68,8 @@ enum GameActionType {
 	ChooseClashingTerritory,
 	ClashAttack,
 	ClashAttackResponse,
-	
+	ClashResolveVote,
+
 	SanctuaryActionCard,
 	CitadelActionCard,
 	ConquestActionCard,
@@ -215,6 +216,15 @@ export class GameActionFactory {
 				removeClan: removeClan,
 				removedCard: removedCard
 			}
+		};
+	}
+
+	static async clashResolveVote(gameId: string): Promise<GameAction> {
+		return {
+			type: GameActionType.ClashResolveVote,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {}
 		};
 	}
 

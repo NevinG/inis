@@ -18,7 +18,14 @@ export type RestrictedGameState = {
   flockOfCrowsIsClockwise: boolean;
   bren: string;
   capitalTerritory: string;
-  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string};
+  clashes: {
+    instigatorId: string;
+    territories: string[];
+    currentlyResolvingTerritory: string;
+    playerTurn: string;
+    attackedPlayer: string;
+    votedToResolve: string[];
+  };
 
   hasStarted: boolean;
   winner: string;
@@ -37,7 +44,7 @@ export type RestrictedGameState = {
   currentlyPlayingCard: string;
 
   //extra info passed based on currentlyPlayingCard
-  discardedCards: string[]; //for druid card 
+  discardedCards: string[]; //for druid card
 
   tiles: GameTile[];
 };
@@ -53,7 +60,21 @@ export class GameState {
   flockOfCrowsIsClockwise: boolean;
   bren: string = "";
   capitalTerritory: string = "";
-  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string} = {instigatorId: "", territories: [], currentlyResolvingTerritory: "", playerTurn: "", attackedPlayer: ""};
+  clashes: {
+    instigatorId: string;
+    territories: string[];
+    currentlyResolvingTerritory: string;
+    playerTurn: string;
+    attackedPlayer: string;
+    votedToResolve: string[];
+  } = {
+    instigatorId: "",
+    territories: [],
+    currentlyResolvingTerritory: "",
+    playerTurn: "",
+    attackedPlayer: "",
+    votedToResolve: [],
+  };
   passCount: number = 0;
 
   hasStarted: boolean = false;
@@ -131,7 +152,11 @@ export class GameState {
       seasonPhasePlayerTurn: this.seasonPhasePlayerTurn,
       currentlyPlayingCard: this.currentlyPlayingCard,
 
-      discardedCards: this.currentlyPlayingCard == "5" && playerId == this.seasonPhasePlayerTurn ? this.discardedActionCards : [], //if druid is being played return discardedActionCards
+      discardedCards:
+        this.currentlyPlayingCard == "5" &&
+        playerId == this.seasonPhasePlayerTurn
+          ? this.discardedActionCards
+          : [], //if druid is being played return discardedActionCards
     };
   }
 
@@ -141,7 +166,9 @@ export class GameState {
   }
 
   dealActionCards() {
-    const shuffledActionCards = shuffle(Object.values(actionCards).map((card) => card.id));
+    const shuffledActionCards = shuffle(
+      Object.values(actionCards).map((card) => card.id)
+    );
     this.setAsideCard = shuffledActionCards.pop();
     this.cardsToDraft = 1;
 

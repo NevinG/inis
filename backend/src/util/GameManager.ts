@@ -129,8 +129,9 @@ export default class GameManager {
 
       //check if drafting is over
       if (
-        game.players[Object.keys(game.players)[0]].hand.filter(card => card in actionCards).length ==
-        game.cardsToDraft
+        game.players[Object.keys(game.players)[0]].hand.filter(
+          (card) => card in actionCards
+        ).length == game.cardsToDraft
       ) {
         game.isDrafting = false;
 
@@ -269,9 +270,14 @@ export default class GameManager {
       return;
     }
 
-    //3. Take advantage cards 
+    //3. Take advantage cards
     //remove old advantage cards
-    Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => !(cardId in advantageCards)));
+    Object.values(game.players).forEach(
+      (player) =>
+        (player.hand = player.hand.filter(
+          (cardId) => !(cardId in advantageCards)
+        ))
+    );
     //get new advantage cards
     game.discardedAdvantageCards = [];
     game.tiles.forEach((tile) => {
@@ -287,7 +293,10 @@ export default class GameManager {
 
     //5. Deal action cards
     //remove old action cards
-    Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => !(cardId in actionCards)));
+    Object.values(game.players).forEach(
+      (player) =>
+        (player.hand = player.hand.filter((cardId) => !(cardId in actionCards)))
+    );
     game.discardedActionCards = [];
     game.dealActionCards();
 
@@ -296,7 +305,7 @@ export default class GameManager {
 
     //other stuff
     //remove festival from all tiles
-    game.tiles.forEach((tile) => tile.festival = false);
+    game.tiles.forEach((tile) => (tile.festival = false));
   }
 
   public static playCard(
@@ -314,10 +323,10 @@ export default class GameManager {
 
     //play card
     game.currentlyPlayingCard = cardId; //this tells the game that the card is being played. Next response received will include card manuever
-    
+
     //if no manuever just play the card
-    switch(game.currentlyPlayingCard){
-      case "1": 
+    switch (game.currentlyPlayingCard) {
+      case "1":
         return this.playBardSeasonActionCard(gameId, playerId);
     }
 
@@ -328,11 +337,27 @@ export default class GameManager {
     ]);
   }
 
-  private static playedCardManuever(gameId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+  private static playedCardManuever(
+    gameId: string,
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
 
+    //remove card manuever
+    game.currentlyPlayingCard = "";
+
+    //add card to discard pile
+    if (cardId in actionCards) {
+      game.discardedActionCards.push(cardId);
+    } else if (cardId in advantageCards) {
+      game.discardedAdvantageCards.push(cardId);
+    } else if (cardId in epicTaleCards) {
+      game.discardedEpicTaleCards.push(cardId);
+    }
+
     //if there is a clash return the current game state and the clash is going to be resolved
-    if(game.clashes.instigatorId != "") {
+    if (game.clashes.instigatorId != "") {
       //if there is only one clash, set that as the currently resolving territory
       //otherwise the frontend is going to have to choose which territory to resolve
       if (game.clashes.territories.length == 1) {
@@ -349,20 +374,6 @@ export default class GameManager {
       ]);
     }
 
-    //remove card manuever
-    game.currentlyPlayingCard = "";
-
-    //add card to discard pile
-    if(cardId in actionCards) {
-      game.discardedActionCards.push(cardId);
-    }
-    else if (cardId in advantageCards) {
-      game.discardedAdvantageCards.push(cardId);
-    }
-    else if (cardId in epicTaleCards) {
-      game.discardedEpicTaleCards.push(cardId);
-    }
-
     //next person's turn TODO: use flock of crows in this
     const playerKeys = Object.keys(game.players);
     game.seasonPhasePlayerTurn =
@@ -375,7 +386,10 @@ export default class GameManager {
     ]);
   }
 
-  public static chooseClashingTerritory(gameId: string, territoryId: string): [string, RestrictedGameState][] {
+  public static chooseClashingTerritory(
+    gameId: string,
+    territoryId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     game.clashes.currentlyResolvingTerritory = territoryId;
 
@@ -386,21 +400,37 @@ export default class GameManager {
     ]);
   }
 
-  public static clashAttack(gameId: string, attackedPlayerId: string) : [string, RestrictedGameState][] {
+  public static clashAttack(
+    gameId: string,
+    attackedPlayerId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     game.clashes.attackedPlayer = attackedPlayerId;
 
     //check if player has no actions cards to discard
-    if(game.players[attackedPlayerId].hand.filter(cardId => cardId in actionCards).length == 0){
+    if (
+      game.players[attackedPlayerId].hand.filter(
+        (cardId) => cardId in actionCards
+      ).length == 0
+    ) {
       //player must remove a clan from the territory
-      game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[attackedPlayerId]--;
+      game.tiles.find(
+        (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+      )!.clans[attackedPlayerId]--;
       game.clashes.attackedPlayer = "";
 
       //next players turn in clash
       //next person's turn TODO: use flock of crows in this
-      const playerKeys = Object.keys(game.players).filter(key => game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0);
+      const playerKeys = Object.keys(game.players).filter(
+        (key) =>
+          game.tiles.find(
+            (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+          )?.clans[key] ?? 0 > 0
+      );
       game.clashes.playerTurn =
-        playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
+        playerKeys[
+          (playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length
+        ];
     }
 
     //return to all players in game
@@ -410,14 +440,22 @@ export default class GameManager {
     ]);
   }
 
-  public static clashAttackResponse(gameId: string, playerId: string, clashAttackResponse: ClashAttackResponse) : [string, RestrictedGameState][] {
+  public static clashAttackResponse(
+    gameId: string,
+    playerId: string,
+    clashAttackResponse: ClashAttackResponse
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
-    if(clashAttackResponse.removeClan) {
-      game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[playerId]--;
+    if (clashAttackResponse.removeClan) {
+      game.tiles.find(
+        (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+      )!.clans[playerId]--;
     }
 
-    if(clashAttackResponse.removedCard) {
-      game.players[playerId].hand = game.players[playerId].hand.filter(cardId => cardId != clashAttackResponse.removedCard);
+    if (clashAttackResponse.removedCard) {
+      game.players[playerId].hand = game.players[playerId].hand.filter(
+        (cardId) => cardId != clashAttackResponse.removedCard
+      );
       game.discardedActionCards.push(clashAttackResponse.removedCard);
     }
 
@@ -426,9 +464,20 @@ export default class GameManager {
 
     //next players turn in clash
     //next person's turn TODO: use flock of crows in this
-    const playerKeys = Object.keys(game.players).filter(key => game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0);
+    const playerKeys = Object.keys(game.players).filter(
+      (key) =>
+        game.tiles.find(
+          (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+        )?.clans[key] ?? 0 > 0
+    );
     game.clashes.playerTurn =
-      playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
+      playerKeys[
+        (playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length
+      ];
+
+    //remove all resolve votes
+    //TODO add this to all palces that mark the end of a clash manuever
+    game.clashes.votedToResolve;
 
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
@@ -437,7 +486,48 @@ export default class GameManager {
     ]);
   }
 
-  public static playSanctuaryActionCard(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
+  public static clashResolveVote(
+    gameId: string,
+    playerId: string
+  ): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+
+    //add players resolve clash vote
+    if (game.clashes.votedToResolve.indexOf(playerId) == -1)
+      game.clashes.votedToResolve.push(playerId);
+
+    //check if clash is resolved
+    if (
+      game.clashes.votedToResolve.length >=
+      Object.values(
+        game.tiles.find(
+          (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+        )!.clans
+      ).filter((clans) => clans > 0).length
+    ) {
+      game.clashes.attackedPlayer = "";
+      game.clashes.currentlyResolvingTerritory = "";
+      game.clashes.instigatorId = "";
+      game.clashes.territories = [];
+      game.clashes.votedToResolve = [];
+
+      //next person's turn TODO: use flock of crows in this
+      const playerKeys = Object.keys(game.players);
+      game.seasonPhasePlayerTurn =
+        playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
+    }
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static playSanctuaryActionCard(
+    gameId: string,
+    territoryId: string,
+    playerId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add sanctuary to that territory
     game.tiles.find((tile) => tile.tileId == territoryId)!.sanctuaries++;
@@ -449,7 +539,10 @@ export default class GameManager {
     return this.playedCardManuever(gameId, playerId, "12");
   }
 
-  private static playBardSeasonActionCard(gameId: string, playerId: string): [string, RestrictedGameState][] {
+  private static playBardSeasonActionCard(
+    gameId: string,
+    playerId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add epic tale card to player's hand
     game.players[playerId].hand.push(game.epicTaleCards.pop()!);
@@ -457,35 +550,53 @@ export default class GameManager {
     return this.playedCardManuever(gameId, playerId, "1");
   }
 
-  public static playCitadelActionCard(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
+  public static playCitadelActionCard(
+    gameId: string,
+    territoryId: string,
+    playerId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add citadel to that territory
     game.tiles.find((tile) => tile.tileId == territoryId)!.citadels++;
     //add that advantage card to player's hand if it hasn't been played
-    Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => cardId != allTiles[territoryId].advantageCard));
-    if(!game.discardedAdvantageCards.find(cardId => cardId == allTiles[territoryId].advantageCard)){
+    Object.values(game.players).forEach(
+      (player) =>
+        (player.hand = player.hand.filter(
+          (cardId) => cardId != allTiles[territoryId].advantageCard
+        ))
+    );
+    if (
+      !game.discardedAdvantageCards.find(
+        (cardId) => cardId == allTiles[territoryId].advantageCard
+      )
+    ) {
       game.players[playerId].hand.push(allTiles[territoryId].advantageCard);
     }
 
     return this.playedCardManuever(gameId, playerId, "2");
   }
 
-  public static playMoveClansCard(gameId: string, moveClans: {from: string, to: string, numClans: number}[], playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playMoveClansCard(
+    gameId: string,
+    moveClans: { from: string; to: string; numClans: number }[],
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //move clans
-    moveClans.forEach(move => {
-      const fromTile = game.tiles.find(tile => tile.tileId == move.from);
-      const toTile = game.tiles.find(tile => tile.tileId == move.to);
+    moveClans.forEach((move) => {
+      const fromTile = game.tiles.find((tile) => tile.tileId == move.from);
+      const toTile = game.tiles.find((tile) => tile.tileId == move.to);
 
       //add zero clans if player doesn't exist in the clan object
-      if(!(playerId in fromTile!.clans)) fromTile!.clans[playerId] = 0;
-      if(!(playerId in toTile!.clans)) toTile!.clans[playerId] = 0;
+      if (!(playerId in fromTile!.clans)) fromTile!.clans[playerId] = 0;
+      if (!(playerId in toTile!.clans)) toTile!.clans[playerId] = 0;
 
       fromTile!.clans[playerId] -= move.numClans;
       toTile!.clans[playerId] += move.numClans;
 
       //TODO INITIATE CLASHES
-      if (Object.values(toTile!.clans).filter(x => x > 0).length > 1 ){
+      if (Object.values(toTile!.clans).filter((x) => x > 0).length > 1) {
         game.addClash(playerId, move.to);
       }
     });
@@ -493,37 +604,53 @@ export default class GameManager {
     return this.playedCardManuever(gameId, playerId, cardId);
   }
 
-  public static playAddClansCard(gameId: string, action: {territory: string, numClans: number}[], playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playAddClansCard(
+    gameId: string,
+    action: { territory: string; numClans: number }[],
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add clans to territory
-    action.forEach(action => {
-      const tile = game.tiles.find(tile => tile.tileId == action.territory);
-      if(!(playerId in tile!.clans)) tile!.clans[playerId] = 0;
+    action.forEach((action) => {
+      const tile = game.tiles.find((tile) => tile.tileId == action.territory);
+      if (!(playerId in tile!.clans)) tile!.clans[playerId] = 0;
       tile!.clans[playerId] += action.numClans;
     });
 
     return this.playedCardManuever(gameId, playerId, cardId);
   }
 
-  public static playDruidCard(gameId: string, discardedCardId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playDruidCard(
+    gameId: string,
+    discardedCardId: string,
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add card to player's hand
     game.players[playerId].hand.push(discardedCardId);
     //remove card from discarded pile
-    game.discardedActionCards = game.discardedActionCards.filter(cardId => cardId != discardedCardId);
+    game.discardedActionCards = game.discardedActionCards.filter(
+      (cardId) => cardId != discardedCardId
+    );
     return this.playedCardManuever(gameId, playerId, cardId);
   }
 
-  public static playExplorationCard(gameId: string, tiles: NewTile, cardId: string): [string, RestrictedGameState][] {
+  public static playExplorationCard(
+    gameId: string,
+    tiles: NewTile,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     game.players[game.seasonPhasePlayerTurn].reserveClans--;
-    const gameTile : GameTile = {
+    const gameTile: GameTile = {
       tileId: game.tileDeck.pop()!.id,
       positions: Object.values(tiles),
       clans: {},
       sanctuaries: 0,
       citadels: 0,
-      festival: false
+      festival: false,
     };
     gameTile.clans[game.seasonPhasePlayerTurn] = 1; //add initial clan to this territory
     game.tiles.push(gameTile);
@@ -531,10 +658,15 @@ export default class GameManager {
     return this.playedCardManuever(gameId, game.seasonPhasePlayerTurn, cardId);
   }
 
-  public static playFestivalCard(gameId: string, tileId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playFestivalCard(
+    gameId: string,
+    tileId: string,
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add clan to that territory
-    const tile = game.tiles.find((tile) => tile.tileId == tileId)
+    const tile = game.tiles.find((tile) => tile.tileId == tileId);
     tile!.clans[playerId] = (tile!.clans[playerId] ?? 0) + 1;
     //add festival to that territory
     game.tiles.find((tile) => tile.tileId == tileId)!.festival = true;
@@ -542,19 +674,29 @@ export default class GameManager {
     return this.playedCardManuever(gameId, playerId, cardId);
   }
 
-  public static playNewAllianceCard(gameId: string, newAlliance: {territory: string, opponent: string}, playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playNewAllianceCard(
+    gameId: string,
+    newAlliance: { territory: string; opponent: string },
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add clan to that territory and remove from one opponent if opponent is specifies
-    const tile = game.tiles.find((tile) => tile.tileId == newAlliance.territory);
+    const tile = game.tiles.find(
+      (tile) => tile.tileId == newAlliance.territory
+    );
     tile!.clans[playerId] = (tile!.clans[playerId] ?? 0) + 1;
-    if(newAlliance.opponent != ""){
+    if (newAlliance.opponent != "") {
       tile!.clans[newAlliance.opponent] -= 1;
     }
-    
+
     return this.playedCardManuever(gameId, playerId, cardId);
   }
 
-  public static pass(gameId: string, playerId: string): [string, RestrictedGameState][] {
+  public static pass(
+    gameId: string,
+    playerId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     game.passCount++;
 
@@ -576,7 +718,10 @@ export default class GameManager {
     ]);
   }
 
-  public static takePretenderToken(gameId: string, playerId: string): [string, RestrictedGameState][] {
+  public static takePretenderToken(
+    gameId: string,
+    playerId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     const player = game.players[playerId];
 
@@ -614,72 +759,84 @@ export default class GameManager {
   }
 
   //Returns playerId of winner if there is a winner, otherwise returns ""
-  private static checkForVictory(gameId: string) : string{
+  private static checkForVictory(gameId: string): string {
     const game = this.currentGames[gameId];
-    const potentialWinners = Object.values(game.players).filter(player => player.hasPretenderToken).map(player  => {return{playerId: player.id, winConditions : 0}});
+    const potentialWinners = Object.values(game.players)
+      .filter((player) => player.hasPretenderToken)
+      .map((player) => {
+        return { playerId: player.id, winConditions: 0 };
+      });
     //remove old pretender tokens
-    Object.values(game.players).forEach(player => player.hasPretenderToken = false);
+    Object.values(game.players).forEach(
+      (player) => (player.hasPretenderToken = false)
+    );
 
     //check victory conditions per player
-    potentialWinners.forEach(potentialWinner => {
+    potentialWinners.forEach((potentialWinner) => {
       //get how many victory conditions player meets
-    
+
       //condition 1 : chieftan over 6 or more opposing clans
       let chieftanOverXOpposingClans = 0;
-      game.tiles.forEach(tile => {
-        if(this.getChiefton(tile) == potentialWinner.playerId){
+      game.tiles.forEach((tile) => {
+        if (this.getChiefton(tile) == potentialWinner.playerId) {
           Object.entries(tile.clans).forEach(([playerId, numClans]) => {
-            if(playerId != potentialWinner.playerId){
+            if (playerId != potentialWinner.playerId) {
               chieftanOverXOpposingClans += numClans;
             }
           });
         }
       });
-      if(chieftanOverXOpposingClans >= 6){
+      if (chieftanOverXOpposingClans >= 6) {
         potentialWinner.winConditions++;
       }
       //condition 2 : present in territories with 6 or more total sanctuaries
       let totalSanctuariesPresentIn = 0;
-      game.tiles.forEach(tile => {
-        if(potentialWinner.playerId in tile.clans && tile.clans[potentialWinner.playerId] > 0){
+      game.tiles.forEach((tile) => {
+        if (
+          potentialWinner.playerId in tile.clans &&
+          tile.clans[potentialWinner.playerId] > 0
+        ) {
           totalSanctuariesPresentIn += tile.sanctuaries;
         }
       });
-      if(totalSanctuariesPresentIn >= 6){
+      if (totalSanctuariesPresentIn >= 6) {
         potentialWinner.winConditions++;
       }
       //condition 3 : present in 6 or more territories
       let totalTerritoriesPresentIn = 0;
-      game.tiles.forEach(tile => {
-        if(potentialWinner.playerId in tile.clans && tile.clans[potentialWinner.playerId] > 0){
+      game.tiles.forEach((tile) => {
+        if (
+          potentialWinner.playerId in tile.clans &&
+          tile.clans[potentialWinner.playerId] > 0
+        ) {
           totalTerritoriesPresentIn++;
         }
       });
-      if(totalTerritoriesPresentIn >= 6){
+      if (totalTerritoriesPresentIn >= 6) {
         potentialWinner.winConditions++;
       }
     });
 
-    let winners : string[] = [];
+    let winners: string[] = [];
     let currentMaxWinConditions = 1;
-    potentialWinners.forEach(potentialWinner => {
-      if(potentialWinner.winConditions > currentMaxWinConditions){
+    potentialWinners.forEach((potentialWinner) => {
+      if (potentialWinner.winConditions > currentMaxWinConditions) {
         winners = [potentialWinner.playerId];
-        currentMaxWinConditions = potentialWinner.winConditions
-      } else if(potentialWinner.winConditions == currentMaxWinConditions){
+        currentMaxWinConditions = potentialWinner.winConditions;
+      } else if (potentialWinner.winConditions == currentMaxWinConditions) {
         winners.push(potentialWinner.playerId);
       }
     });
 
     //return winner
-    if(winners.length == 1){
+    if (winners.length == 1) {
       return winners[0];
     } else {
-      winners.forEach(winner => {
-        if(winner == game.bren){
+      winners.forEach((winner) => {
+        if (winner == game.bren) {
           return winner;
         }
-      })
+      });
     }
     return "";
   }
