@@ -7,7 +7,7 @@ import {
 } from "../types/GameState";
 import { Player } from "../types/Player";
 import { allTiles, GameTile } from "../types/Tile";
-import { NewTile, SocketManager } from "./SocketManager";
+import { ClashAttackResponse, NewTile, SocketManager } from "./SocketManager";
 
 export default class GameManager {
   static currentGames: { [gameId: string]: GameState } = {};
@@ -331,6 +331,24 @@ export default class GameManager {
   private static playedCardManuever(gameId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
 
+    //if there is a clash return the current game state and the clash is going to be resolved
+    if(game.clashes.instigatorId != "") {
+      //if there is only one clash, set that as the currently resolving territory
+      //otherwise the frontend is going to have to choose which territory to resolve
+      if (game.clashes.territories.length == 1) {
+        game.clashes.currentlyResolvingTerritory = game.clashes.territories[0];
+      }
+
+      //make the instigator the first player to resolve the clash
+      game.clashes.playerTurn = game.clashes.instigatorId;
+
+      //return to all players in game
+      return Object.keys(game.players).map((playerId) => [
+        game.players[playerId].socketId,
+        game.getGameInstance(playerId),
+      ]);
+    }
+
     //remove card manuever
     game.currentlyPlayingCard = "";
 
@@ -349,6 +367,68 @@ export default class GameManager {
     const playerKeys = Object.keys(game.players);
     game.seasonPhasePlayerTurn =
       playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static chooseClashingTerritory(gameId: string, territoryId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    game.clashes.currentlyResolvingTerritory = territoryId;
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static clashAttack(gameId: string, attackedPlayerId: string) : [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    game.clashes.attackedPlayer = attackedPlayerId;
+
+    //check if player has no actions cards to discard
+    if(game.players[attackedPlayerId].hand.filter(cardId => cardId in actionCards).length == 0){
+      //player must remove a clan from the territory
+      game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[attackedPlayerId]--;
+      game.clashes.attackedPlayer = "";
+
+      //next players turn in clash
+      //next person's turn TODO: use flock of crows in this
+      const playerKeys = Object.keys(game.players).filter(key => game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0);
+      game.clashes.playerTurn =
+        playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
+    }
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static clashAttackResponse(gameId: string, playerId: string, clashAttackResponse: ClashAttackResponse) : [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    if(clashAttackResponse.removeClan) {
+      game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[playerId]--;
+    }
+
+    if(clashAttackResponse.removedCard) {
+      game.players[playerId].hand = game.players[playerId].hand.filter(cardId => cardId != clashAttackResponse.removedCard);
+      game.discardedActionCards.push(clashAttackResponse.removedCard);
+    }
+
+    //player is no longer being attacked
+    game.clashes.attackedPlayer = "";
+
+    //next players turn in clash
+    //next person's turn TODO: use flock of crows in this
+    const playerKeys = Object.keys(game.players).filter(key => game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0);
+    game.clashes.playerTurn =
+      playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
 
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
@@ -405,6 +485,9 @@ export default class GameManager {
       toTile!.clans[playerId] += move.numClans;
 
       //TODO INITIATE CLASHES
+      if (Object.values(toTile!.clans).filter(x => x > 0).length > 1 ){
+        game.addClash(playerId, move.to);
+      }
     });
 
     return this.playedCardManuever(gameId, playerId, cardId);

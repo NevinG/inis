@@ -3,6 +3,7 @@
 	import { GameActionFactory } from '$lib/types/GameActions';
 	import type { RestrictedGameState } from '$lib/types/GameState';
 	import CitadelAction from './CardActions/CitadelAction.svelte';
+	import Clash from './CardActions/Clash.svelte';
 	import ConquestAction from './CardActions/ConquestAction.svelte';
 	import CraftsmanAndPeasantsAction from './CardActions/CraftsmanAndPeasantsAction.svelte';
 	import DruidAction from './CardActions/DruidAction.svelte';
@@ -54,7 +55,11 @@
 		<GameTopBar {restrictedGameState} />
 	</div>
 	<!-- Render game for performing specific action -->
-	{#if restrictedGameState.currentlyPlayingCard && restrictedGameState.seasonPhasePlayerTurn == restrictedGameState.playerId}
+	<!-- render clash -->
+	{#if restrictedGameState.clashes.instigatorId} 
+		<Clash {restrictedGameState} {socket} {gameId} />
+	<!-- render specific action cards on your turn -->
+	{:else if restrictedGameState.currentlyPlayingCard && restrictedGameState.seasonPhasePlayerTurn == restrictedGameState.playerId}
 		<!-- Sanctuary render -->
 		{#if restrictedGameState.currentlyPlayingCard == '12'}
 			<SanctuaryAction {restrictedGameState} {socket} {gameId} />

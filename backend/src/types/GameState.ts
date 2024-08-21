@@ -18,6 +18,7 @@ export type RestrictedGameState = {
   flockOfCrowsIsClockwise: boolean;
   bren: string;
   capitalTerritory: string;
+  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string};
 
   hasStarted: boolean;
   winner: string;
@@ -52,6 +53,7 @@ export class GameState {
   flockOfCrowsIsClockwise: boolean;
   bren: string = "";
   capitalTerritory: string = "";
+  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string} = {instigatorId: "", territories: [], currentlyResolvingTerritory: "", playerTurn: "", attackedPlayer: ""};
   passCount: number = 0;
 
   hasStarted: boolean = false;
@@ -111,7 +113,7 @@ export class GameState {
       flockOfCrowsIsClockwise: this.flockOfCrowsIsClockwise,
       bren: this.bren,
       capitalTerritory: this.capitalTerritory,
-
+      clashes: this.clashes,
       tiles: this.tiles,
 
       hasStarted: this.hasStarted,
@@ -131,6 +133,11 @@ export class GameState {
 
       discardedCards: this.currentlyPlayingCard == "5" && playerId == this.seasonPhasePlayerTurn ? this.discardedActionCards : [], //if druid is being played return discardedActionCards
     };
+  }
+
+  addClash(instigatorId: string, territory: string) {
+    this.clashes.instigatorId = instigatorId;
+    this.clashes.territories.push(territory);
   }
 
   dealActionCards() {

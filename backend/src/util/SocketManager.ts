@@ -14,7 +14,9 @@ type GameAction = {
   MoveClans |
   AddClans |
   NewTile |
-  NewAlliance;
+  NewAlliance |
+  ChoosePlayer |
+  ClashAttackResponse;
 };
 
 type JoinGame = {
@@ -49,6 +51,15 @@ type NewAlliance= {
   opponent: string;
 }
 
+type ChoosePlayer = {
+  playerId: string
+}
+
+export type ClashAttackResponse = {
+  removeClan: boolean;
+  removedCard: string;
+}
+
 export type NewTile = {
   0: {x: number, y: number},
   1: {x: number, y: number},
@@ -66,6 +77,9 @@ enum GameActionType {
 	PlayCard,
 	Pass,
 	TakePretenderToken,
+  ChooseClashingTerritory,
+  ClashAttack,
+  ClashAttackResponse,
 
 	SanctuaryActionCard,
   CitadelActionCard,
@@ -188,6 +202,24 @@ export class SocketManager {
 
       case GameActionType.TakePretenderToken:
         GameManager.takePretenderToken(gameAction.gameId, playerId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.ChooseClashingTerritory:
+        const chooseClashingTerritory = gameAction.data as ChooseTerritory;
+        GameManager.chooseClashingTerritory(gameAction.gameId, chooseClashingTerritory.territory).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.ClashAttack:
+        const clashAttack = gameAction.data as ChoosePlayer;
+        GameManager.clashAttack(gameAction.gameId, clashAttack.playerId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.ClashAttackResponse:
+        const clashAttackResponse = gameAction.data as ClashAttackResponse;
+        GameManager.clashAttackResponse(gameAction.gameId, playerId, clashAttackResponse).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
         });
         break;

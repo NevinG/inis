@@ -174,6 +174,13 @@
 					{#if tile.festival}
 						<p style:font-weight="bold" style:text-align="center" style:margin="2px 0">Festival</p>
 					{/if}
+					{#if restrictedGameState.clashes.territories.includes(tile.tileId)}
+						{#if restrictedGameState.clashes.currentlyResolvingTerritory == tile.tileId}
+							<p style:text-align="center" style:margin="2px 0">Clash(now)</p>
+						{:else}
+							<p style:text-align="center" style:margin="2px 0">Clash(later)</p>
+						{/if}
+					{/if}
 					<!--Clans -->
 					<div>
 						{#each Object.entries(tile.clans) as [playerId, numberOfClans]}

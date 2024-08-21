@@ -45,6 +45,15 @@ type NewAlliance = {
 	opponent: string;
 };
 
+type ChoosePlayer = {
+  playerId: string
+};
+
+type ClashAttackResponse = {
+  removeClan: boolean;
+  removedCard: string;
+}
+
 enum GameActionType {
 	JoinGame,
 	ViewGame,
@@ -56,7 +65,10 @@ enum GameActionType {
 	PlayCard,
 	Pass,
 	TakePretenderToken,
-
+	ChooseClashingTerritory,
+	ClashAttack,
+	ClashAttackResponse,
+	
 	SanctuaryActionCard,
 	CitadelActionCard,
 	ConquestActionCard,
@@ -169,6 +181,40 @@ export class GameActionFactory {
 			gameId,
 			playerJWT: await getJWT(),
 			data: {}
+		};
+	}
+
+	static async chooseClashingTerritory(gameId: string, territoryId: string): Promise<GameAction<ChooseTerritory>> {
+		return {
+			type: GameActionType.ChooseClashingTerritory,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				territory: territoryId
+			}
+		};
+	}
+
+	static async clashAttack(gameId: string, attackedPlayerId: string): Promise<GameAction<ChoosePlayer>> {
+		return {
+			type: GameActionType.ClashAttack,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				playerId: attackedPlayerId
+			}
+		};
+	}
+
+	static async clashAttackResponse(gameId: string, removeClan: boolean, removedCard: string = ""): Promise<GameAction<ClashAttackResponse>> {
+		return {
+			type: GameActionType.ClashAttackResponse,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				removeClan: removeClan,
+				removedCard: removedCard
+			}
 		};
 	}
 
