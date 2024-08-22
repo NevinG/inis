@@ -7,7 +7,12 @@ import {
 } from "../types/GameState";
 import { Player } from "../types/Player";
 import { allTiles, GameTile } from "../types/Tile";
-import { ClashAttackResponse, NewTile, SocketManager } from "./SocketManager";
+import {
+  ClashAttackResponse,
+  NewTile,
+  SocketManager,
+  WithdrawClans,
+} from "./SocketManager";
 
 export default class GameManager {
   static currentGames: { [gameId: string]: GameState } = {};
@@ -407,6 +412,10 @@ export default class GameManager {
     const game = this.currentGames[gameId];
     game.clashes.attackedPlayer = attackedPlayerId;
 
+    //remove all resolve votes
+    //TODO add this to all palces that mark the end of a clash manuever
+    game.clashes.votedToResolve = [];
+
     //check if player has no actions cards to discard
     if (
       game.players[attackedPlayerId].hand.filter(
@@ -462,6 +471,10 @@ export default class GameManager {
     //player is no longer being attacked
     game.clashes.attackedPlayer = "";
 
+    //remove all resolve votes
+    //TODO add this to all palces that mark the end of a clash manuever
+    game.clashes.votedToResolve = [];
+
     //next players turn in clash
     //next person's turn TODO: use flock of crows in this
     const playerKeys = Object.keys(game.players).filter(
@@ -474,10 +487,6 @@ export default class GameManager {
       playerKeys[
         (playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length
       ];
-
-    //remove all resolve votes
-    //TODO add this to all palces that mark the end of a clash manuever
-    game.clashes.votedToResolve;
 
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
@@ -505,17 +514,63 @@ export default class GameManager {
         )!.clans
       ).filter((clans) => clans > 0).length
     ) {
+
+      game.clashes.territories = game.clashes.territories.filter(territory => territory != game.clashes.currentlyResolvingTerritory);
       game.clashes.attackedPlayer = "";
       game.clashes.currentlyResolvingTerritory = "";
-      game.clashes.instigatorId = "";
-      game.clashes.territories = [];
       game.clashes.votedToResolve = [];
 
-      //next person's turn TODO: use flock of crows in this
-      const playerKeys = Object.keys(game.players);
-      game.seasonPhasePlayerTurn =
-        playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
+      if(game.clashes.territories.length == 0) {
+        game.clashes.instigatorId = "";
+
+        //next person's turn TODO: use flock of crows in this
+        const playerKeys = Object.keys(game.players);
+        game.seasonPhasePlayerTurn =
+          playerKeys[(playerKeys.indexOf(game.seasonPhasePlayerTurn) + 1) % playerKeys.length];
+      }
     }
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static clashWithdraw(
+    gameId: string,
+    withdrawClans: WithdrawClans,
+    playerId: string
+  ): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    const attackTile = game.tiles.find(
+      (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+    );
+
+    withdrawClans.forEach((clan) => {
+      attackTile!.clans[playerId] -= clan.numClans;
+      const withdrawToTile = game.tiles.find(
+        (tile) => tile.tileId == clan.withdrawTerritory
+      );
+      withdrawToTile!.clans[playerId] += clan.numClans;
+    });
+
+    //remove all resolve votes
+    //TODO add this to all palces that mark the end of a clash manuever
+    game.clashes.votedToResolve = [];
+
+    //next players turn in clash
+    //next person's turn TODO: use flock of crows in this
+    const playerKeys = Object.keys(game.players).filter(
+      (key) =>
+        game.tiles.find(
+          (tile) => tile.tileId == game.clashes.currentlyResolvingTerritory
+        )?.clans[key] ?? 0 > 0
+    );
+    game.clashes.playerTurn =
+      playerKeys[
+        (playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length
+      ];
+
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
       game.players[playerId].socketId,

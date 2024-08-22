@@ -16,7 +16,8 @@ type GameAction = {
   NewTile |
   NewAlliance |
   ChoosePlayer |
-  ClashAttackResponse;
+  ClashAttackResponse |
+  WithdrawClans;
 };
 
 type JoinGame = {
@@ -66,6 +67,11 @@ export type NewTile = {
   2: {x: number, y: number},
 }
 
+export type WithdrawClans = {
+  withdrawTerritory: string, 
+  numClans: number
+}[]
+
 enum GameActionType {
 	JoinGame,
 	ViewGame,
@@ -81,6 +87,7 @@ enum GameActionType {
   ClashAttack,
   ClashAttackResponse,
   ClashResolveVote,
+  ClashWithdraw,
 
 	SanctuaryActionCard,
   CitadelActionCard,
@@ -226,6 +233,12 @@ export class SocketManager {
         break;
       case GameActionType.ClashResolveVote:
         GameManager.clashResolveVote(gameAction.gameId, playerId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.ClashWithdraw:
+        const clashWithdraw = gameAction.data as WithdrawClans;
+        GameManager.clashWithdraw(gameAction.gameId,clashWithdraw, playerId).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
         });
         break;

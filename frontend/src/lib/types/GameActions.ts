@@ -54,6 +54,11 @@ type ClashAttackResponse = {
   removedCard: string;
 }
 
+export type WithdrawClans = {
+  withdrawTerritory: string, 
+  numClans: number
+}[]
+
 enum GameActionType {
 	JoinGame,
 	ViewGame,
@@ -69,6 +74,7 @@ enum GameActionType {
 	ClashAttack,
 	ClashAttackResponse,
 	ClashResolveVote,
+	ClashWithdraw,
 
 	SanctuaryActionCard,
 	CitadelActionCard,
@@ -225,6 +231,15 @@ export class GameActionFactory {
 			gameId,
 			playerJWT: await getJWT(),
 			data: {}
+		};
+	}
+
+	static async clashWithdraw(gameId: string, withdrawClans: WithdrawClans) : Promise<GameAction<WithdrawClans>> {
+		return {
+			type: GameActionType.ClashWithdraw,
+			gameId,
+			playerJWT: await getJWT(),
+			data: withdrawClans
 		};
 	}
 
