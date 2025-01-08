@@ -48,7 +48,7 @@ export type RestrictedGameState = {
   currentlyPlayingCard: string;
 
   //extra info passed based on currentlyPlayingCard
-  discardedCards: string[]; //for druid card 
+  discardedCards: string[]; //for druid card
 
   tiles: GameTile[];
 };
@@ -164,7 +164,11 @@ export class GameState {
       seasonPhasePlayerTurn: this.seasonPhasePlayerTurn,
       currentlyPlayingCard: this.currentlyPlayingCard,
 
-      discardedCards: this.currentlyPlayingCard == "5" && playerId == this.seasonPhasePlayerTurn ? this.discardedActionCards : [], //if druid is being played return discardedActionCards
+      discardedCards:
+        this.currentlyPlayingCard == "5" &&
+        playerId == this.seasonPhasePlayerTurn
+          ? this.discardedActionCards
+          : [], //if druid is being played return discardedActionCards
     };
   }
 
@@ -208,7 +212,9 @@ export class GameState {
   
 
   dealActionCards() {
-    const shuffledActionCards = shuffle(Object.values(actionCards).map((card) => card.id));
+    const shuffledActionCards = shuffle(
+      Object.values(actionCards).map((card) => card.id)
+    );
     this.setAsideCard = shuffledActionCards.pop();
     this.cardsToDraft = 1;
 

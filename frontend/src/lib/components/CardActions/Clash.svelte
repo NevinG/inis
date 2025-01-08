@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { actionCards, advantageCards, epicTaleCards, type SelectableCard } from '$lib/types/Card';
-	import { GameActionFactory } from '$lib/types/GameActions';
+	import { GameActionFactory, type WithdrawClans } from '$lib/types/GameActions';
 	import type { RestrictedGameState } from '$lib/types/GameState';
 	import { allTiles, type GameTile } from '$lib/types/Tile';
 	import GameBottomBar from '../GameBottomBar.svelte';
@@ -19,7 +19,51 @@
 	let choseWithdraw = false;
 	let withdrawMoves: { from: string; to: string; numClans: number }[] = [];
 
-	export async function selectTile(tileId: string) {
+	//clash withdraw stuff
+	let withdrawMoves: WithdrawClans = [];
+
+	function moveTroop(tile: GameTile & { selected: boolean }) {
+		const move = withdrawMoves.find((move) => move.withdrawTerritory == tile.tileId);
+
+		if (move) {
+			move.numClans++;
+		} else {
+			withdrawMoves.push({ withdrawTerritory: tile.tileId, numClans: 1 });
+		}
+		withdrawMoves = withdrawMoves;
+	}
+
+	function takeTroopBack(tile: GameTile & { selected: boolean }) {
+		const move = withdrawMoves.find((move) => move.withdrawTerritory == tile.tileId);
+		if (move) {
+			move.numClans--;
+			if (move.numClans == 0) {
+				withdrawMoves = withdrawMoves.filter((move) => move.withdrawTerritory != tile.tileId);
+			}
+		}
+		withdrawMoves = withdrawMoves;
+	}
+
+	function tilesAdjacent(tile1: GameTile | undefined, tile2: GameTile | undefined) {
+		//go through each tiles 3 positions and get the min manhattan distance between any two
+		return tile1!.positions.some((pos1) =>
+			tile2!.positions.some((pos2) => Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y) == 1)
+		);
+	}
+
+	function isChiefton(tile: GameTile) {
+		let moreClansThan = 0;
+		if(!(restrictedGameState.playerId in tile.clans))
+			return false;
+		const currentTroopsInTerritory = tile.clans[restrictedGameState.playerId] ?? 0;
+
+		Object.values(tile.clans).forEach((clanNum) => {
+			moreClansThan += currentTroopsInTerritory > clanNum ? 1 : 0;
+		});
+		return moreClansThan == Object.values(tile.clans).length - 1;
+	}
+
+	async function selectTile(tileId: string) {
 		const tile = gameTiles.find((tile) => tile.tileId == tileId);
 		if (restrictedGameState.clashes.currentlyResolvingTerritory == "" && restrictedGameState.clashes.instigatorId != restrictedGameState.playerId)
 			return;
@@ -102,11 +146,14 @@
 	style:justify-content="center"
 	style:align-items="center"
 >
-	{#if restrictedGameState.clashes.currentlyResolvingTerritory == ""}
+	{#if restrictedGameState.clashes.currentlyResolvingTerritory == ''}
 		{#if restrictedGameState.clashes.instigatorId == restrictedGameState.playerId}
 			<span>Choose territory to clash with.</span>&nbsp;
 		{:else}
-			<span>{restrictedGameState.players[restrictedGameState.clashes.instigatorId].name} is choosing a territory to resolve the next clash in.</span>&nbsp;
+			<span
+				>{restrictedGameState.players[restrictedGameState.clashes.instigatorId].name} is choosing a territory
+				to resolve the next clash in.</span
+			>&nbsp;
 		{/if}
 	{:else if !restrictedGameState.clashes.citadelStageOver}
 	  {#if restrictedGameState.clashes.playerTurn == restrictedGameState.playerId}
@@ -129,25 +176,57 @@
 			<br>
 			{restrictedGameState.clashes.instigatorId != restrictedGameState.playerId ? restrictedGameState.players[restrictedGameState.clashes.playerTurn].name  + " turn" : ""}
 		</span>&nbsp;
+		{#if restrictedGameState.tiles.find((tile) => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)?.clans[restrictedGameState.playerId] ?? 0 > 0}
+			<button
+				disabled={restrictedGameState.clashes.votedToResolve.indexOf(
+					restrictedGameState.playerId
+				) != -1}
+				on:click={async () => {
+					socket.send(JSON.stringify(await GameActionFactory.clashResolveVote(gameId)));
+				}}
+			>
+				Vote For Resolution ({restrictedGameState.clashes.votedToResolve.length}/{Object.values(
+					restrictedGameState.tiles.find(
+						(tile) => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory
+					)?.clans ?? []
+				).filter((val) => val > 0).length})
+			</button>&nbsp;
+		{/if}
 		{#if restrictedGameState.clashes.attackedPlayer && restrictedGameState.clashes.attackedPlayer == restrictedGameState.playerId}
-			<button on:click={async () => {
-				socket.send(JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, true, "")));
-			}}>Remove Clan</button>&nbsp;
-			<button on:click={async () => { //TODO: test if I need this line or if it does anything
-				myCards = myCards;
-				const selectedCard = myCards.find(card => card.selected)?.id;
-				if(selectedCard)
-					socket.send(JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, false, selectedCard)));
-			}}>Remove Action Card</button>
-		{:else if restrictedGameState.clashes.playerTurn == restrictedGameState.playerId && restrictedGameState.clashes.attackedPlayer == ""}
-			{#if choseAttack}
-				<button on:click={() => {choseAttack = false}}>Back</button>&nbsp;
+			<button
+				on:click={async () => {
+					socket.send(
+						JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, true, ''))
+					);
+				}}>Remove Clan</button
+			>&nbsp;
+			<button
+				on:click={async () => {
+					const selectedCard = myCards.find((card) => card.selected)?.id;
+					if (selectedCard)
+						socket.send(
+							JSON.stringify(
+								await GameActionFactory.clashAttackResponse(gameId, false, selectedCard)
+							)
+						);
+				}}>Remove Action Card</button
+			>
+		{:else if restrictedGameState.clashes.playerTurn == restrictedGameState.playerId && restrictedGameState.clashes.attackedPlayer == ''}
+			{#if chooseAttack}
+				<button
+					on:click={() => {
+						chooseAttack = false;
+					}}>Back</button
+				>&nbsp;
 				{#each Object.entries(restrictedGameState.tiles.find((tile) => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)?.clans ?? {}) as [playerId, clanNum]}
 					{#if clanNum > 0 && playerId != restrictedGameState.playerId}
-						<button on:click={async () => {
-							socket.send(JSON.stringify(await GameActionFactory.clashAttack(gameId, playerId)));
-						}}>
-						{restrictedGameState.players[playerId].name}
+						<button
+							on:click={async () => {
+								chooseAttack = false;
+								socket.send(JSON.stringify(await GameActionFactory.clashAttack(gameId, playerId)));
+							}}
+						>
+							{restrictedGameState.players[playerId].name}
 						</button>&nbsp;
 					{/if}
 				{/each}
@@ -184,12 +263,14 @@
 			{/if}
 		{/if}
 	{/if}
-	{#if (restrictedGameState.clashes.currentlyResolvingTerritory == "" && restrictedGameState.clashes.instigatorId == restrictedGameState.playerId)}
+	{#if restrictedGameState.clashes.currentlyResolvingTerritory == '' && restrictedGameState.clashes.instigatorId == restrictedGameState.playerId}
 		<button
 			disabled={!selectedTile}
 			on:click={async () => {
 				socket.send(
-					JSON.stringify(await GameActionFactory.chooseClashingTerritory(gameId, selectedTile.tileId))
+					JSON.stringify(
+						await GameActionFactory.chooseClashingTerritory(gameId, selectedTile.tileId)
+					)
 				);
 			}}
 			style:height="25px">Submit</button

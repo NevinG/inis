@@ -239,6 +239,24 @@ export class GameActionFactory {
 		};
 	}
 
+	static async clashResolveVote(gameId: string): Promise<GameAction> {
+		return {
+			type: GameActionType.ClashResolveVote,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {}
+		};
+	}
+
+	static async clashWithdraw(gameId: string, withdrawClans: WithdrawClans) : Promise<GameAction<WithdrawClans>> {
+		return {
+			type: GameActionType.ClashWithdraw,
+			gameId,
+			playerJWT: await getJWT(),
+			data: withdrawClans
+		};
+	}
+
 	static async sanctuaryActionCard(
 		gameId: string,
 		tileId: string

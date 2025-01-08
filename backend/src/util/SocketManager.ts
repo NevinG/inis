@@ -71,6 +71,11 @@ export type NewTile = {
   2: {x: number, y: number},
 }
 
+export type WithdrawClans = {
+  withdrawTerritory: string, 
+  numClans: number
+}[]
+
 enum GameActionType {
 	JoinGame,
 	ViewGame,
