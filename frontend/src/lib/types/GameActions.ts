@@ -54,6 +54,10 @@ type ClashAttackResponse = {
   removedCard: string;
 }
 
+type YesOrNO = {
+  yes: boolean
+}
+
 enum GameActionType {
 	JoinGame,
 	ViewGame,
@@ -63,22 +67,28 @@ enum GameActionType {
 	ChooseCapitalTerritory,
 	PlaceInitialClan,
 	PlayCard,
+  PlayTriskalCard,
 	Pass,
 	TakePretenderToken,
-	ChooseClashingTerritory,
-	ClashAttack,
-	ClashAttackResponse,
-	
+  ChooseClashingTerritory,
+  ClashMoveToCitadel,
+  ClashDonePlacingInCitadels,
+  ClashAttack,
+  ClashAttackResponse,
+  ClashVoteToResolve,
+  ClashWithdraw,
+
 	SanctuaryActionCard,
-	CitadelActionCard,
-	ConquestActionCard,
-	CraftsmanAndPeasantsActionCard,
-	DruidActionCard,
-	ExplorationActionCard,
-	FestivalActionCard,
-	MigrationActionCard,
-	NewAllianceActionCard,
-	NewClansActionCard
+  CitadelActionCard,
+  ConquestActionCard,
+  CraftsmanAndPeasantsActionCard,
+  DruidActionCard,
+  ExplorationActionCard,
+  FestivalActionCard,
+  MigrationActionCard,
+  NewAllianceActionCard,
+  NewClansActionCard,
+  NotImplementedAction,
 }
 
 export class GameActionFactory {
@@ -167,6 +177,17 @@ export class GameActionFactory {
 	static async playCard(gameId: string, cardId: string): Promise<GameAction<PlayCard>> {
 		return {
 			type: GameActionType.PlayCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				cardId
+			}
+		};
+	}
+
+	static async playTriskalCard(gameId: string, cardId: string): Promise<GameAction<PlayCard>> {
+		return {
+			type: GameActionType.PlayTriskalCard,
 			gameId,
 			playerJWT: await getJWT(),
 			data: {
@@ -337,6 +358,51 @@ export class GameActionFactory {
 			gameId,
 			playerJWT: await getJWT(),
 			data: addClans
+		};
+	}
+
+	static async clashMoveToCitadel(gameId: string): Promise<GameAction> {
+		return {
+			type: GameActionType.ClashMoveToCitadel,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {}
+		};
+	}
+
+	static async clashDonePlacingInCitadels(gameId: string): Promise<GameAction> {
+		return {
+			type: GameActionType.ClashDonePlacingInCitadels,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {}
+		};
+	}
+
+	static async withdraw(gameId: string, withdrawMoves: MoveClans): Promise<GameAction<MoveClans>> {
+		return {
+			type: GameActionType.ClashWithdraw,
+			gameId,
+			playerJWT: await getJWT(),
+			data: withdrawMoves
+		};
+	}
+
+	static async PlayNotImplementedActionCard(gameId: string, cardId: string): Promise<GameAction> {
+		return {
+			type: GameActionType.NotImplementedAction,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {cardId}
+		};
+	}
+
+	static async clashVoteToResolve(gameId: string, vote: boolean): Promise<GameAction<YesOrNO>> {
+		return {
+			type: GameActionType.ClashVoteToResolve,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {yes: vote} as YesOrNO
 		};
 	}
 }

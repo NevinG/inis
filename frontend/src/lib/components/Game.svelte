@@ -13,6 +13,7 @@
 	import MigrationAction from './CardActions/MigrationAction.svelte';
 	import NewAllianceAction from './CardActions/NewAllianceAction.svelte';
 	import NewClansAction from './CardActions/NewClansAction.svelte';
+	import NotImplemented from './CardActions/NotImplemented.svelte';
 	import SanctuaryAction from './CardActions/SanctuaryAction.svelte';
 	import GameBottomBar from './GameBottomBar.svelte';
 	import GameMap from './GameMap.svelte';
@@ -86,7 +87,7 @@
 		{:else if restrictedGameState.currentlyPlayingCard == '11'}
 			<NewClansAction {restrictedGameState} {socket} {gameId} />
 		{:else}
-			<p>Action of card {currentCard.name} isn't implemented yet</p>
+		  <NotImplemented {restrictedGameState} {socket} {gameId} />
 		{/if}
 		<!-- Default render -->
 	{:else if restrictedGameState.bren == restrictedGameState.playerId && restrictedGameState.currentlyPlayingCard == '6'}
@@ -95,7 +96,7 @@
 		<div style:width="100%" style:height="65%">
 			<GameMap {restrictedGameState} {selectTile} />
 		</div>
-		<div style:width="100%" style:height="20%" style:display="flex">
+		<div style:width="100%" style:height="20%">
 			<GameBottomBar {restrictedGameState} {socket} {gameId} />
 		</div>
 	{/if}

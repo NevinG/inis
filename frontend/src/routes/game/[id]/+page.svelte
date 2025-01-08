@@ -13,7 +13,7 @@
 	let socket: WebSocket;
 	onMount(async () => {
 		await api.getAuth();
-		socket = new WebSocket('ws://localhost:8080');
+		socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
 		// Connection opened
 		socket.addEventListener('open', async () => {
 			socket.send(JSON.stringify(await GameActionFactory.viewGame(data.id)));
@@ -22,6 +22,7 @@
 		// Listen for messages
 		socket.addEventListener('message', async (event) => {
 			const response = JSON.parse(event.data) as RestrictedGameState;
+			console.log(response);
 			restrictedGameState = response as RestrictedGameState;
 		});
 	});

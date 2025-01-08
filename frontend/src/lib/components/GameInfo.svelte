@@ -35,6 +35,8 @@
 			</div>
 			<!-- Players Clan Reserve -->
 			<p style:margin="0 1px">Cn: {player.reserveClans}</p>
+			<!-- Players total Deeds -->
+			<p style:margin="0 1px">Deeds: {player.deedCount}</p>
 			<!-- Display if bren -->
 			{#if restrictedGameState.bren == player.id}<p style:margin="0 1px">Bren</p>{/if}
 			<!-- Display if has pretender token -->

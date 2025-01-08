@@ -309,6 +309,9 @@ export default class GameManager {
 
     game.passCount = 0;
 
+    //reset each players triskals after someone plays a card
+    Object.values(game.players).forEach(player => player.triskalsAvailable = []);
+
     //remove card from player hand and add to discarded pile
     player.hand = player.hand.filter((card) => card != cardId);
 
@@ -328,29 +331,29 @@ export default class GameManager {
     ]);
   }
 
-  private static playedCardManuever(gameId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playTriskalCard(
+    gameId: string,
+    playerId: string,
+    cardId: string
+  ): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
+    const player = game.players[playerId];
 
-    //if there is a clash return the current game state and the clash is going to be resolved
-    if(game.clashes.instigatorId != "") {
-      //if there is only one clash, set that as the currently resolving territory
-      //otherwise the frontend is going to have to choose which territory to resolve
-      if (game.clashes.territories.length == 1) {
-        game.clashes.currentlyResolvingTerritory = game.clashes.territories[0];
-      }
-
-      //make the instigator the first player to resolve the clash
-      game.clashes.playerTurn = game.clashes.instigatorId;
-
-      //return to all players in game
-      return Object.keys(game.players).map((playerId) => [
-        game.players[playerId].socketId,
-        game.getGameInstance(playerId),
-      ]);
+    //remove card from player hand and add to discarded pile
+    player.hand = player.hand.filter((card) => card != cardId);
+    
+    //if no manuever just play the card
+    switch(cardId){
+      case "1": 
+        this.playBardTriskal(gameId, playerId);
+        break;
     }
 
-    //remove card manuever
-    game.currentlyPlayingCard = "";
+    return this.playedCardManuever(gameId, playerId, cardId, true);
+  }
+
+  private static discardCard(gameId: string, cardId: string) {
+    const game = this.currentGames[gameId];
 
     //add card to discard pile
     if(cardId in actionCards) {
@@ -362,11 +365,72 @@ export default class GameManager {
     else if (cardId in epicTaleCards) {
       game.discardedEpicTaleCards.push(cardId);
     }
+  }
+
+  private static resolveClash(gameId: string) {
+    const game = this.currentGames[gameId];
+
+    // Remove the resolved territory from the list
+    game.clashes.territories = game.clashes.territories.filter(
+      (territory) => territory !== game.clashes.currentlyResolvingTerritory
+    );
+
+    //take clans out of citadels
+    Object.entries(game.clashes.citadel).forEach(([playerId, numClans]) => {
+      game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[playerId] += numClans;
+    });
+
+    game.clashes.currentlyResolvingTerritory = "";
+
+    // Check if there are more clashes to resolve
+    if (game.clashes.territories.length ==  0) {
+      // Reset all clash variables
+      game.clashes = {
+        instigatorId: "",
+        territories: [],
+        currentlyResolvingTerritory: "",
+        playerTurn: "",
+        citadel: {},
+        citadelPlayerTurn: "",
+        citadelStageOver: false,
+        donePlayingCitadels: [],
+        attackedPlayer: "",
+        votesToResolve: {},
+      };
+    }
+  }
+
+  public static playNotImplemented(gameId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
+    return this.playedCardManuever(gameId, playerId, cardId)
+  }
+
+  private static playedCardManuever(gameId: string, playerId: string, cardId: string, triskal: boolean = false): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+
+    //if there is a clash return the current game state and the clash is going to be resolved
+    if(game.clashes.instigatorId != "" && !triskal) {
+      //if there is only one clash, set that as the currently resolving territory
+      //otherwise the frontend is going to have to choose which territory to resolve
+      if (game.clashes.territories.length == 1) {
+        game.clashes.currentlyResolvingTerritory = game.clashes.territories[0];
+      }
+
+      //make the instigator the first player to resolve the clash
+      game.clashes.playerTurn = game.clashes.instigatorId;
+    }
+
+    //remove card manuever
+    if(!triskal)
+      game.currentlyPlayingCard = "";
+
+    this.discardCard(gameId, cardId);
 
     //next person's turn TODO: use flock of crows in this
-    const playerKeys = Object.keys(game.players);
-    game.seasonPhasePlayerTurn =
-      playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
+    if(!triskal) {
+      const playerKeys = Object.keys(game.players);
+      game.seasonPhasePlayerTurn =
+        playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
+    }
 
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
@@ -386,6 +450,73 @@ export default class GameManager {
     ]);
   }
 
+  public static clashMoveToCitadel(gameId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    const tile = game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory);
+
+    //move clan to citadel
+    game.clashes.citadel[playerId] = (game.clashes.citadel[playerId] ?? 0) + 1;
+    tile!.clans[playerId]--;
+
+    //check if citadel stage is resolved
+    game.clashes.citadelStageOver = this.checkIfCitadelStageResolved(gameId);
+
+    //next players turn to place citadel
+    //follow turn order of players ignoring the instigator
+    //TODO: flock of crows
+    if(!game.clashes.citadelStageOver) {
+      const playerKeys = Object.keys(game.players).filter(key => (game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0) && (key != game.clashes.instigatorId) && !game.clashes.donePlayingCitadels.includes(key));
+      game.clashes.citadelPlayerTurn = playerKeys[(playerKeys.indexOf(game.clashes.citadelPlayerTurn) + 1) % playerKeys.length];
+    } else {
+      this.checkClashResolved(gameId);
+    }
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static donePlacingInCitadels(gameId: string, playerId: string): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+
+    game.clashes.donePlayingCitadels.push(playerId);
+
+    //check if citadel stage is resolved
+    game.clashes.citadelStageOver = this.checkIfCitadelStageResolved(gameId);
+    game.clashes.citadelPlayerTurn = "";
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  private static checkIfCitadelStageResolved(gameId: string): boolean {
+    const game = this.currentGames[gameId];
+    const tile = game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory);
+
+    const numPlayersWithExposedClans = Object.values(tile!.clans).filter(clan => clan > 0).length;
+    return numPlayersWithExposedClans - game.clashes.donePlayingCitadels.length == 1 || Object.values(game.clashes.citadel).reduce((a, b) => a + b, 0) == game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.citadels;
+  }
+
+  private static checkClashResolved(gameId: string){
+    const game = this.currentGames[gameId];
+    //ignore if clash is already resolved
+    if(game.clashes.instigatorId == "" || game.clashes.currentlyResolvingTerritory == "") return;
+
+    //if there is only one player with exposed territories left then resolve the clash
+
+    const tile = game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory);
+    const numPlayersWithExposedClans = Object.values(tile!.clans).filter(clan => clan > 0).length;
+
+    if(numPlayersWithExposedClans == 1 || numPlayersWithExposedClans == Object.values(game.clashes.votesToResolve).filter(vote => vote).length){
+      this.resolveClash(gameId);
+    }
+  }
+
   public static clashAttack(gameId: string, attackedPlayerId: string) : [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     game.clashes.attackedPlayer = attackedPlayerId;
@@ -403,6 +534,9 @@ export default class GameManager {
         playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
     }
 
+    //clear clash resolve votes
+    game.clashes.votesToResolve = {};
+
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
       game.players[playerId].socketId,
@@ -414,6 +548,9 @@ export default class GameManager {
     const game = this.currentGames[gameId];
     if(clashAttackResponse.removeClan) {
       game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[playerId]--;
+      //bard triskal activated
+      if(game.players[game.clashes.playerTurn].hand.includes("1"))
+        game.players[game.clashes.playerTurn].triskalsAvailable.push("1");
     }
 
     if(clashAttackResponse.removedCard) {
@@ -427,8 +564,24 @@ export default class GameManager {
     //next players turn in clash
     //next person's turn TODO: use flock of crows in this
     const playerKeys = Object.keys(game.players).filter(key => game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0);
-    game.clashes.playerTurn =
-      playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
+    game.clashes.playerTurn = playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
+    
+    //if there is only one player with exposed territories left then resolve the clash
+    this.checkClashResolved(gameId);
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
+  }
+
+  public static clashVoteToResolve(gameId: string, playerId: string, vote: boolean) : [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    game.clashes.votesToResolve[playerId] = vote;
+
+    //if all players with exposed clans in the territory have voted to resolve then the clash is over
+    this.checkClashResolved(gameId);
 
     //return to all players in game
     return Object.keys(game.players).map((playerId) => [
@@ -457,6 +610,15 @@ export default class GameManager {
     return this.playedCardManuever(gameId, playerId, "1");
   }
 
+  private static playBardTriskal(gameId: string, playerId: string){
+    //give player a deed
+    const game = this.currentGames[gameId];
+    game.players[playerId].deedCount++;
+
+    //remove triskal option
+    game.players[playerId].triskalsAvailable = game.players[playerId].triskalsAvailable.filter(triskal => triskal != "1");
+  }
+
   public static playCitadelActionCard(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //add citadel to that territory
@@ -470,7 +632,7 @@ export default class GameManager {
     return this.playedCardManuever(gameId, playerId, "2");
   }
 
-  public static playMoveClansCard(gameId: string, moveClans: {from: string, to: string, numClans: number}[], playerId: string, cardId: string): [string, RestrictedGameState][] {
+  public static playMoveClansCard(gameId: string, moveClans: {from: string, to: string, numClans: number}[], playerId: string, cardId: string, clashWithdraw: boolean = false): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     //move clans
     moveClans.forEach(move => {
@@ -480,17 +642,20 @@ export default class GameManager {
       //add zero clans if player doesn't exist in the clan object
       if(!(playerId in fromTile!.clans)) fromTile!.clans[playerId] = 0;
       if(!(playerId in toTile!.clans)) toTile!.clans[playerId] = 0;
-
+      
       fromTile!.clans[playerId] -= move.numClans;
       toTile!.clans[playerId] += move.numClans;
 
       //TODO INITIATE CLASHES
-      if (Object.values(toTile!.clans).filter(x => x > 0).length > 1 ){
+      if (!clashWithdraw && Object.values(toTile!.clans).filter(x => x > 0).length > 1 ){
         game.addClash(playerId, move.to);
+        
+        //check if clash already resolved, can happen because festival toke
+        this.checkClashResolved(gameId);
       }
     });
 
-    return this.playedCardManuever(gameId, playerId, cardId);
+    return this.playedCardManuever(gameId, playerId, cardId, cardId == "-1");
   }
 
   public static playAddClansCard(gameId: string, action: {territory: string, numClans: number}[], playerId: string, cardId: string): [string, RestrictedGameState][] {
@@ -506,11 +671,13 @@ export default class GameManager {
   }
 
   public static playDruidCard(gameId: string, discardedCardId: string, playerId: string, cardId: string): [string, RestrictedGameState][] {
-    const game = this.currentGames[gameId];
-    //add card to player's hand
-    game.players[playerId].hand.push(discardedCardId);
-    //remove card from discarded pile
-    game.discardedActionCards = game.discardedActionCards.filter(cardId => cardId != discardedCardId);
+    if(discardedCardId) {
+      const game = this.currentGames[gameId];
+      //add card to player's hand
+      game.players[playerId].hand.push(discardedCardId);
+      //remove card from discarded pile
+      game.discardedActionCards = game.discardedActionCards.filter(cardId => cardId != discardedCardId);
+    }
     return this.playedCardManuever(gameId, playerId, cardId);
   }
 
@@ -575,7 +742,7 @@ export default class GameManager {
       game.getGameInstance(playerId),
     ]);
   }
-
+  
   public static takePretenderToken(gameId: string, playerId: string): [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     const player = game.players[playerId];
@@ -635,7 +802,7 @@ export default class GameManager {
           });
         }
       });
-      if(chieftanOverXOpposingClans >= 6){
+      if(chieftanOverXOpposingClans >= 6 - game.players[potentialWinner.playerId].deedCount){
         potentialWinner.winConditions++;
       }
       //condition 2 : present in territories with 6 or more total sanctuaries
@@ -645,7 +812,7 @@ export default class GameManager {
           totalSanctuariesPresentIn += tile.sanctuaries;
         }
       });
-      if(totalSanctuariesPresentIn >= 6){
+      if(totalSanctuariesPresentIn >= 6 - game.players[potentialWinner.playerId].deedCount){
         potentialWinner.winConditions++;
       }
       //condition 3 : present in 6 or more territories
@@ -655,7 +822,7 @@ export default class GameManager {
           totalTerritoriesPresentIn++;
         }
       });
-      if(totalTerritoriesPresentIn >= 6){
+      if(totalTerritoriesPresentIn >= 6 - game.players[potentialWinner.playerId].deedCount){
         potentialWinner.winConditions++;
       }
     });
@@ -682,5 +849,30 @@ export default class GameManager {
       })
     }
     return "";
+  }
+
+  public static handleClashWithdraw(gameId: string, moveClans: {from: string, to: string, numClans: number}[]): [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+    this.playMoveClansCard(gameId, moveClans, game.clashes.playerTurn, "-1", true);
+
+    //player is no longer being attacked
+    game.clashes.attackedPlayer = "";
+
+    //next players turn in clash
+    //next person's turn TODO: use flock of crows in this
+    const playerKeys = Object.keys(game.players).filter(key => game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)?.clans[key] ?? 0 > 0);
+    game.clashes.playerTurn = playerKeys[(playerKeys.indexOf(game.clashes.playerTurn) + 1) % playerKeys.length];
+    
+    //if there is only one player with exposed territories left then resolve the clash
+    this.checkClashResolved(gameId);
+
+    //clear clash resolve votes
+    game.clashes.votesToResolve = {};
+
+    //return to all players in game
+    return Object.keys(game.players).map((playerId) => [
+      game.players[playerId].socketId,
+      game.getGameInstance(playerId),
+    ]);
   }
 }

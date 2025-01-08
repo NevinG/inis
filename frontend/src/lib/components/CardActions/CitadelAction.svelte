@@ -48,6 +48,6 @@
 		style:height="25px">Submit</button
 	>
 </div>
-<div style:width="100%" style:height="20%" style:display="flex">
+<div style:width="100%" style:height="20%">
 	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>

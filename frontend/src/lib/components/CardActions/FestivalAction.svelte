@@ -39,6 +39,16 @@
 	style:align-items="center"
 >
 	<span>Choose territory to put the festival token in.</span>&nbsp;
+	{#if restrictedGameState.tiles.filter(tile => tile.clans[restrictedGameState.playerId] > 0 && tile.sanctuaries > 0).length == 0}
+		<span>No valid tiles to put the festival token in.</span>
+		<button
+			on:click={async () => {
+				socket.send(
+					JSON.stringify(await GameActionFactory.PlayNotImplementedActionCard(gameId, '7'))
+				);
+			}}
+		>Discard Card</button>
+	{/if}
 	<button
 		disabled={!selectedTile}
 		on:click={async () => {
@@ -49,6 +59,6 @@
 		style:height="25px">Submit</button
 	>
 </div>
-<div style:width="100%" style:height="20%" style:display="flex">
+<div style:width="100%" style:height="20%">
 	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>

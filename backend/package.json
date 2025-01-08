@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "server": "npx tsc && node .dist/index.js"
+    "server": "npx tsc && node .dist/index.js",
+    "tunnel": "lt "
   },
   "keywords": [],
   "author": "",

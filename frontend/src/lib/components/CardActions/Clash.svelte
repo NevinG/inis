@@ -16,14 +16,16 @@
 	export let gameId: string;
 
 	let choseAttack = false;
+	let choseWithdraw = false;
+	let withdrawMoves: { from: string; to: string; numClans: number }[] = [];
 
 	export async function selectTile(tileId: string) {
 		const tile = gameTiles.find((tile) => tile.tileId == tileId);
 		if (restrictedGameState.clashes.currentlyResolvingTerritory == "" && restrictedGameState.clashes.instigatorId != restrictedGameState.playerId)
 			return;
-		
+
 		if(restrictedGameState.clashes.currentlyResolvingTerritory != "")
-			return; 
+			return;
 
 		if (tile!.selected) {
 			tile!.selected = false;
@@ -34,10 +36,62 @@
 		}
 		restrictedGameState = restrictedGameState;
 	}
+
+	function moveClan(tile: GameTile & { selected: boolean }) {
+		const move = withdrawMoves.find((move) => move.to == tile.tileId);
+		if (move) {
+			move.numClans++;
+		} else {
+			withdrawMoves.push({ from: restrictedGameState.clashes.currentlyResolvingTerritory, to: tile.tileId, numClans: 1 });
+		}
+		withdrawMoves = withdrawMoves;
+	}
+
+	function takeClanBack(tile: GameTile & { selected: boolean }) {
+		const move = withdrawMoves.find((move) => move.to == tile.tileId);
+		if (move) {
+			move.numClans--;
+			if (move.numClans == 0) {
+				withdrawMoves = withdrawMoves.filter((move) => move.to != tile.tileId);
+			}
+		}
+		withdrawMoves = withdrawMoves;
+	}
+
+	function tilesAdjacent(tile1: GameTile | undefined, tile2: GameTile | undefined) {
+		return tile1!.positions.some((pos1) =>
+			tile2!.positions.some((pos2) => Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y) == 1)
+		);
+	}
+
+	function isChieftain(tileId: string): boolean {
+		const tile = gameTiles.find((tile) => tile.tileId == tileId);
+		if (!tile) return false;
+		const clans = tile.clans;
+		const playerClans = clans[restrictedGameState.playerId] || 0;
+		return Object.values(clans).every((numClans) => playerClans >= numClans);
+	}
 </script>
 
 <div style:width="100%" style:height="65%">
-	<GameMap {restrictedGameState} {selectTile} />
+	<GameMap {restrictedGameState} {selectTile} clanMoves={withdrawMoves} let:tile>
+		{#if choseWithdraw && tile.tileId != restrictedGameState.clashes.currentlyResolvingTerritory && tilesAdjacent(tile, restrictedGameState.tiles.find((tile) => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)) && isChieftain(tile.tileId)}
+			{#if (restrictedGameState.tiles.find((tile) => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)?.clans[restrictedGameState.playerId] ?? 0) - withdrawMoves.reduce((totalFrom, move) => (move.from == restrictedGameState.clashes.currentlyResolvingTerritory ? move.numClans + totalFrom : totalFrom), 0) > 0}
+				<button
+					on:click={() => {
+						moveClan(tile);
+					}}>Move To</button
+				>
+			{/if}
+			{#if withdrawMoves.find((move) => move.to == tile.tileId)?.numClans ?? 0 > 0}
+				<button
+					on:click={() => {
+						takeClanBack(tile);
+					}}>Move Back</button
+				>
+			{/if}
+		{/if}
+	</GameMap>
 </div>
 <div
 	style:width="-webkit-fill-available"
@@ -54,10 +108,25 @@
 		{:else}
 			<span>{restrictedGameState.players[restrictedGameState.clashes.instigatorId].name} is choosing a territory to resolve the next clash in.</span>&nbsp;
 		{/if}
+	{:else if !restrictedGameState.clashes.citadelStageOver}
+	  {#if restrictedGameState.clashes.playerTurn == restrictedGameState.playerId}
+			<div>You are the instigator so you don't get to go play in citadels</div>
+		{:else}
+		  {#if restrictedGameState.clashes.citadelPlayerTurn == restrictedGameState.playerId}
+				<div>Would you like to put a clan in a citadel?</div>&nbsp;
+				<button on:click={async () => {
+					socket.send(JSON.stringify(await GameActionFactory.clashMoveToCitadel(gameId)));
+				}}>Yes</button>&nbsp;
+
+				<button on:click={async () => {
+					socket.send(JSON.stringify(await GameActionFactory.clashDonePlacingInCitadels(gameId)));
+				}}>No</button>
+			{/if}
+		{/if}
 	{:else}
 		<span>
 			THIS IS A CLASH in {allTiles[restrictedGameState.clashes.currentlyResolvingTerritory].name}
-			<br> 
+			<br>
 			{restrictedGameState.clashes.instigatorId != restrictedGameState.playerId ? restrictedGameState.players[restrictedGameState.clashes.playerTurn].name  + " turn" : ""}
 		</span>&nbsp;
 		{#if restrictedGameState.clashes.attackedPlayer && restrictedGameState.clashes.attackedPlayer == restrictedGameState.playerId}
@@ -81,16 +150,37 @@
 						{restrictedGameState.players[playerId].name}
 						</button>&nbsp;
 					{/if}
-				{/each}	
+				{/each}
 			{/if}
-			{#if !choseAttack}
-			<button on:click={() => {choseAttack = true}}>Attack</button>&nbsp;
+			{#if !choseAttack && !choseWithdraw}
+				<button on:click={() => {choseAttack = true}}>Attack</button>&nbsp;
+				<button on:click={() => {choseWithdraw = true}}>Withdraw</button>&nbsp;
+				<button>Epic Tale Manuever</button>
 			{/if}
-			{#if !choseAttack}
-			<button>Withdraw</button>&nbsp;
+			{#if choseWithdraw}
+				<button on:click={() => {choseWithdraw = false; withdrawMoves = []; gameTiles.forEach((tile) => (tile.selected = false));}}>Undo Withdraw</button>&nbsp;
+				<button disabled={withdrawMoves.length == 0} on:click={async () => {
+					socket.send(JSON.stringify(await GameActionFactory.withdraw(gameId, withdrawMoves)));
+					choseWithdraw = false; withdrawMoves = []; gameTiles.forEach((tile) => (tile.selected = false));
+				}}>Submit Withdraw</button>
 			{/if}
-			{#if !choseAttack}
-			<button>Epic Tale Manuever</button>
+		{/if}
+		{#if restrictedGameState.clashes.attackedPlayer == "" && (restrictedGameState.tiles.find((tile) => tile.tileId == restrictedGameState.clashes.currentlyResolvingTerritory)?.clans[restrictedGameState.playerId] ?? 0) > 0}
+			{#if Object.values(restrictedGameState.clashes.votesToResolve).reduce((a,b) => a && b, true)} <!--If only voted to resolve clash so far -->
+				&nbsp;<button
+				  disabled={restrictedGameState.clashes.votesToResolve[restrictedGameState.playerId]}
+					on:click={async () => {
+						socket.send(JSON.stringify(await GameActionFactory.clashVoteToResolve(gameId, true)));
+					}}
+				>Vote to resolve ({Object.values(restrictedGameState.clashes.votesToResolve).length} votes)</button>&nbsp;
+				<button
+				  disabled={restrictedGameState.clashes.votesToResolve[restrictedGameState.playerId]}
+					on:click={async () => {
+						socket.send(JSON.stringify(await GameActionFactory.clashVoteToResolve(gameId, false)));
+					}}
+				>Vote to not resolve</button>
+			{:else}
+				<span>Someone voted against resolving clash</span>
 			{/if}
 		{/if}
 	{/if}
@@ -106,6 +196,6 @@
 		>
 	{/if}
 </div>
-<div style:width="100%" style:height="20%" style:display="flex">
+<div style:width="100%" style:height="20%">
 	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>

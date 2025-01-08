@@ -8,7 +8,9 @@ export type RestrictedPlayer = {
   actionCards: number;
   advantageCards: number;
   hand: string[];
+  triskalsAvailable: string[];
   reserveClans: number;
+  deedCount: number;
   color: string;
   hasPretenderToken: boolean;
 };
@@ -19,8 +21,10 @@ export class Player {
   name: string;
   ready: boolean = false;
   hand: string[] = [];
+  triskalsAvailable: string[] = [];
   handForDraft: string[] = [];
   reserveClans: number = 12;
+  deedCount: number = 0;
   color: string = "";
   hasPretenderToken: boolean = false;
 
@@ -36,6 +40,7 @@ export class Player {
       name: this.name,
       ready: this.ready,
       reserveClans: this.reserveClans,
+      deedCount: this.deedCount,
       epicTaleCards: this.hand.filter((cardId) => cardId in epicTaleCards)
         .length,
       actionCards: this.hand.filter((cardId) => cardId in actionCards)
@@ -44,6 +49,7 @@ export class Player {
         (cardId) => (cardId in advantageCards)
       ).length,
       hand: this.id == playerId ? this.hand : [],
+      triskalsAvailable: this.id == playerId ? this.triskalsAvailable : [],
       color: this.color,
       hasPretenderToken: this.hasPretenderToken,
     };

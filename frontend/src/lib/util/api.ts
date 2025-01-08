@@ -3,7 +3,7 @@ import { type GamePreview } from '$lib/types/GameState';
 
 export const api = {
 	createGame: async (createGame: CreateGame): Promise<{ id: string }> => {
-		const response = await fetch('http://localhost:3000/api/create', {
+		const response = await fetch(`${import.meta.env.VITE_API_URL}/api/create`, {
 			method: 'POST',
 			body: JSON.stringify(createGame),
 			headers: {
@@ -13,14 +13,14 @@ export const api = {
 		return await response.json();
 	},
 	getPublicGames: async (): Promise<{ games: GamePreview[] }> => {
-		const response = await fetch(`http://localhost:3000/api/game`);
+		const response = await fetch(`${import.meta.env.VITE_API_URL}/api/game`);
 		const games: GamePreview[] = await response.json();
 		return { games: games };
 	},
 	getAuth: async (): Promise<string> => {
 		const curJwt = localStorage.getItem('jwt');
 		const response = await fetch(
-			`http://localhost:3000/api/auth?${curJwt ? `token=${curJwt}` : ''}`
+			`${import.meta.env.VITE_API_URL}/api/auth?${curJwt ? `token=${curJwt}` : ''}`
 		);
 		const { jwt } = await response.json();
 		localStorage.setItem('jwt', jwt);

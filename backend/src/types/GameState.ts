@@ -18,7 +18,18 @@ export type RestrictedGameState = {
   flockOfCrowsIsClockwise: boolean;
   bren: string;
   capitalTerritory: string;
-  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string};
+  clashes: {
+    instigatorId: string, 
+    territories: string[], 
+    currentlyResolvingTerritory: string,
+    citadelPlayerTurn: string,
+    citadelStageOver: boolean,
+    donePlayingCitadels: string[],
+    citadel: {[playerId: string] : number}, 
+    votesToResolve: {[playerId: string] : boolean},
+    playerTurn: string, 
+    attackedPlayer: string
+  };
 
   hasStarted: boolean;
   winner: string;
@@ -53,7 +64,29 @@ export class GameState {
   flockOfCrowsIsClockwise: boolean;
   bren: string = "";
   capitalTerritory: string = "";
-  clashes: {instigatorId: string, territories: string[], currentlyResolvingTerritory: string, playerTurn: string, attackedPlayer: string} = {instigatorId: "", territories: [], currentlyResolvingTerritory: "", playerTurn: "", attackedPlayer: ""};
+  clashes: {
+    instigatorId: string, 
+    territories: string[], 
+    currentlyResolvingTerritory: string,
+    citadelPlayerTurn: string,
+    citadelStageOver: boolean,
+    donePlayingCitadels: string[],
+    citadel: {[playerId: string] : number}, 
+    votesToResolve: {[playerId: string] : boolean},
+    playerTurn: string, 
+    attackedPlayer: string
+  } = {
+    instigatorId: "", 
+    territories: [], 
+    currentlyResolvingTerritory: "", 
+    citadelPlayerTurn: "",
+    citadelStageOver: false,
+    donePlayingCitadels: [],
+    citadel: {},
+    votesToResolve: {},
+    playerTurn: "", 
+    attackedPlayer: ""
+  };
   passCount: number = 0;
 
   hasStarted: boolean = false;
@@ -138,7 +171,41 @@ export class GameState {
   addClash(instigatorId: string, territory: string) {
     this.clashes.instigatorId = instigatorId;
     this.clashes.territories.push(territory);
+    this.clashes.citadelPlayerTurn = this.getNextPlayer(instigatorId, [instigatorId]);
+
+    if(this.tiles.find(tile => tile.tileId == territory)!.citadels == 0) {
+      this.clashes.citadelStageOver = true;
+    }
+
+    //check for festival and remove clan if there is one there
+    if(this.tiles.find(tile => tile.tileId == territory)?.festival) {
+      this.tiles.find(tile => tile.tileId == territory)!.clans[instigatorId] = (this.tiles.find(tile => tile.tileId == territory)?.clans[instigatorId] ?? 0) - 1;
+    }
+    
+    //find the first player with a clan in the territory to start placing citadels
+    let i = 0//to be safe
+    while(this.tiles.find(tile => tile.tileId == territory)?.clans[this.clashes.citadelPlayerTurn] ?? 0 == 0) {
+      this.clashes.citadelPlayerTurn = this.getNextPlayer(this.clashes.citadelPlayerTurn, [instigatorId]);
+      i++;
+      if (i > 10)
+        break;
+    }
   }
+  
+  getNextPlayer(curPlayer: string, excludePlayers: string[]): string {
+    let playerIds = Object.keys(this.players);
+    let curIndex = playerIds.indexOf(curPlayer);
+    let nextIndex = this.flockOfCrowsIsClockwise 
+      ? (curIndex + 1) % playerIds.length 
+      : (curIndex - 1 + playerIds.length) % playerIds.length;
+    while (excludePlayers.includes(playerIds[nextIndex])) {
+      nextIndex = this.flockOfCrowsIsClockwise 
+        ? (nextIndex + 1) % playerIds.length 
+        : (nextIndex - 1 + playerIds.length) % playerIds.length;
+    }
+    return playerIds[nextIndex];
+  }
+  
 
   dealActionCards() {
     const shuffledActionCards = shuffle(Object.values(actionCards).map((card) => card.id));
