@@ -46,6 +46,10 @@ export type RestrictedGameState = {
   isSeasonPhase: boolean;
   seasonPhasePlayerTurn: string;
   currentlyPlayingCard: string;
+  currentlyPlayingTriskalCard: string;
+  playerTurnForResolvingTriskal: string;
+
+  geisAvailable: boolean;
 
   //extra info passed based on currentlyPlayingCard
   discardedCards: string[]; //for druid card 
@@ -104,6 +108,10 @@ export class GameState {
   isSeasonPhase: boolean = false;
   seasonPhasePlayerTurn: string = "";
   currentlyPlayingCard: string = ""; //id of card currently playing
+  currentlyPlayingTriskalCard: string = ""; //id of triskal card currently playing
+  playerTurnForResolvingTriskal: string = "";
+
+  geisAvailable: boolean = false;
 
   tiles: GameTile[] = [];
   tileDeck: Tile[] = JSON.parse(
@@ -163,9 +171,60 @@ export class GameState {
       isSeasonPhase: this.isSeasonPhase,
       seasonPhasePlayerTurn: this.seasonPhasePlayerTurn,
       currentlyPlayingCard: this.currentlyPlayingCard,
+      currentlyPlayingTriskalCard: this.currentlyPlayingTriskalCard,
+      playerTurnForResolvingTriskal: this.playerTurnForResolvingTriskal,
+
+      geisAvailable: this.geisAvailable,
 
       discardedCards: this.currentlyPlayingCard == "5" && playerId == this.seasonPhasePlayerTurn ? this.discardedActionCards : [], //if druid is being played return discardedActionCards
     };
+  }
+
+  clone(): GameState {
+    let clonedState = new GameState(this.privacy, this.maxPlayers);
+    clonedState.id = this.id;
+    clonedState.privacy = this.privacy;
+    clonedState.tenSecondStartingCountdown = this.tenSecondStartingCountdown;
+    clonedState.maxPlayers = this.maxPlayers;
+    clonedState.setAsideCard = this.setAsideCard;
+    clonedState.players = Object.fromEntries(Object.entries(this.players).map(([pid, player]) => [pid, player.clone()]));
+    clonedState.flockOfCrowsIsClockwise = this.flockOfCrowsIsClockwise;
+    clonedState.bren = this.bren;
+    clonedState.capitalTerritory = this.capitalTerritory;
+    clonedState.clashes = {
+      instigatorId: this.clashes.instigatorId,
+      territories: JSON.parse(JSON.stringify(this.clashes.territories)),
+      currentlyResolvingTerritory: this.clashes.currentlyResolvingTerritory,
+      citadelPlayerTurn: this.clashes.citadelPlayerTurn,
+      citadelStageOver: this.clashes.citadelStageOver,
+      donePlayingCitadels: JSON.parse(JSON.stringify(this.clashes.donePlayingCitadels)),
+      citadel: JSON.parse(JSON.stringify(this.clashes.citadel)),
+      votesToResolve: JSON.parse(JSON.stringify(this.clashes.votesToResolve)),
+      playerTurn: this.clashes.playerTurn,
+      attackedPlayer: this.clashes.attackedPlayer
+    };
+    clonedState.passCount = this.passCount;
+    clonedState.hasStarted = this.hasStarted;
+    clonedState.winner = this.winner;
+    clonedState.brenPickingCapital = this.brenPickingCapital;
+    clonedState.placeInitialClans = this.placeInitialClans;
+    clonedState.placeClanTurn = this.placeClanTurn;
+    clonedState.totalInitialClansPlaced = this.totalInitialClansPlaced;
+    clonedState.isDrafting = this.isDrafting;
+    clonedState.cardsToDraft = this.cardsToDraft;
+    clonedState.isSeasonPhase = this.isSeasonPhase;
+    clonedState.seasonPhasePlayerTurn = this.seasonPhasePlayerTurn;
+    clonedState.currentlyPlayingCard = this.currentlyPlayingCard;
+    clonedState.currentlyPlayingTriskalCard = this.currentlyPlayingCard;
+    clonedState.playerTurnForResolvingTriskal = this.playerTurnForResolvingTriskal;
+    clonedState.geisAvailable = this.geisAvailable;
+    clonedState.tiles = JSON.parse(JSON.stringify(this.tiles));
+    clonedState.tileDeck = JSON.parse(JSON.stringify(this.tileDeck));
+    clonedState.epicTaleCards = JSON.parse(JSON.stringify(this.epicTaleCards));
+    clonedState.discardedActionCards = JSON.parse(JSON.stringify(this.discardedActionCards));
+    clonedState.discardedAdvantageCards = JSON.parse(JSON.stringify(this.discardedAdvantageCards));
+    clonedState.discardedEpicTaleCards = JSON.parse(JSON.stringify(this.discardedEpicTaleCards));
+    return clonedState;
   }
 
   addClash(instigatorId: string, territory: string) {

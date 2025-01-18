@@ -35,6 +35,7 @@
 		>
 	{/if}
 	<button
+	  disabled = {newTileParts.length != 3}
 		on:click={async () => {
 			socket.send(
 				JSON.stringify(

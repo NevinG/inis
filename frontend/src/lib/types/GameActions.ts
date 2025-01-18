@@ -89,6 +89,8 @@ enum GameActionType {
   NewAllianceActionCard,
   NewClansActionCard,
   NotImplementedAction,
+  WarlordActionCard,
+  WarlordTriskalActionCard,
 }
 
 export class GameActionFactory {
@@ -249,6 +251,34 @@ export class GameActionFactory {
 			playerJWT: await getJWT(),
 			data: {
 				territory: tileId
+			}
+		};
+	}
+
+	static async warlordActionCard(
+		gameId: string,
+		tileId: string
+	): Promise<GameAction<ChooseTerritory>> {
+		return {
+			type: GameActionType.WarlordActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				territory: tileId
+			}
+		};
+	}
+
+	static async warlordTriskalActionCard(
+		gameId: string,
+		playerId: string
+	): Promise<GameAction<ChoosePlayer>> {
+		return {
+			type: GameActionType.WarlordTriskalActionCard,
+			gameId,
+			playerJWT: await getJWT(),
+			data: {
+				playerId: playerId
 			}
 		};
 	}

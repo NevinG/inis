@@ -15,6 +15,7 @@
 	import NewClansAction from './CardActions/NewClansAction.svelte';
 	import NotImplemented from './CardActions/NotImplemented.svelte';
 	import SanctuaryAction from './CardActions/SanctuaryAction.svelte';
+	import WarlordAction from './CardActions/WarlordAction.svelte';
 	import GameBottomBar from './GameBottomBar.svelte';
 	import GameMap from './GameMap.svelte';
 	import GameTopBar from './GameTopBar.svelte';
@@ -86,6 +87,8 @@
 			<NewAllianceAction {restrictedGameState} {socket} {gameId} />
 		{:else if restrictedGameState.currentlyPlayingCard == '11'}
 			<NewClansAction {restrictedGameState} {socket} {gameId} />
+		{:else if restrictedGameState.currentlyPlayingCard == '13'}
+			<WarlordAction {restrictedGameState} {socket} {gameId} />
 		{:else}
 		  <NotImplemented {restrictedGameState} {socket} {gameId} />
 		{/if}

@@ -5,6 +5,7 @@
 	import type { RestrictedGameState } from '$lib/types/GameState';
 	import { api } from '$lib/util/api.js';
 	import { onMount } from 'svelte';
+	import AdminOption from '$lib/components/AdminOption.svelte';
 
 	let restrictedGameState: RestrictedGameState;
 	export let data;
@@ -34,6 +35,8 @@
 	{:else}
 		<GameLobby {restrictedGameState} gameId={data.id} {socket} />
 	{/if}
+	<AdminOption {restrictedGameState} {socket}/>
 {:else}
 	<p>This Game Doesn't Exist</p>
+	<a href="/">Back to Lobby</a>
 {/if}

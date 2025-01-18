@@ -10,6 +10,7 @@ import { allTiles, GameTile } from "../types/Tile";
 import { ClashAttackResponse, NewTile, SocketManager } from "./SocketManager";
 
 export default class GameManager {
+  static lastGameStates: { [gameId: string]: GameState } = {};
   static currentGames: { [gameId: string]: GameState } = {};
 
   public static createGame(privacy: GamePrivacy, maxPlayers: number): string {
@@ -133,6 +134,7 @@ export default class GameManager {
         game.cardsToDraft
       ) {
         game.isDrafting = false;
+        game.geisAvailable = false;
 
         //start the season phase
         game.isSeasonPhase = true;
@@ -161,7 +163,7 @@ export default class GameManager {
           this.startGame(gameId);
         }
         game.tenSecondStartingCountdown = false;
-      }, 10 * 1000);
+      }, (process.env.DEV_MODE == "true" ? 0 : 10) * 1000);
     } else {
       game.tenSecondStartingCountdown = false;
     }
@@ -247,6 +249,9 @@ export default class GameManager {
   public static startAssemblyPhase(gameId: string) {
     const game = this.currentGames[gameId];
 
+    //remove available triskals from all players
+    Object.values(game.players).forEach(player => player.triskalsAvailable = []);
+
     //1. assign bren
     let playerWithMostClansInCapital = game.bren;
     const capitalTerritory = game.tiles.find(
@@ -299,11 +304,53 @@ export default class GameManager {
     game.tiles.forEach((tile) => tile.festival = false);
   }
 
+  private static saveGameState(gameId: string) {
+    this.lastGameStates[gameId] = this.currentGames[gameId].clone();
+  }
+
+  private static restoreGameState(gameId: string) {
+    this.currentGames[gameId] = this.lastGameStates[gameId];
+  }
+
+  private static playGeis(gameId: string, playerId: string) {
+    let cardToDiscard = null;
+    if(this.currentGames[gameId].currentlyPlayingCard){
+      cardToDiscard = this.currentGames[gameId].currentlyPlayingCard;
+    } else {
+      cardToDiscard = this.currentGames[gameId].discardedActionCards.pop();
+    }
+    this.restoreGameState(gameId);
+    const game = this.currentGames[gameId];
+
+    //remove geiss card from hand
+    this.currentGames[gameId].players[playerId].hand = this.currentGames[gameId].players[playerId].hand.filter(cardId => cardId != "8");
+
+    //move turn order
+    //TODO: use abstraction here and flock of crows
+    const playerKeys = Object.keys(this.currentGames[gameId].players);
+    this.currentGames[gameId].seasonPhasePlayerTurn =
+      playerKeys[(playerKeys.indexOf(game.seasonPhasePlayerTurn) + 1) % playerKeys.length];
+
+    if(cardToDiscard) {
+      //remove cardToDiscard from all players hands
+      Object.values(game.players).forEach(player => player.hand = player.hand.filter(cardId => cardId != cardToDiscard));
+
+      this.discardCard(gameId, cardToDiscard);
+    }
+    
+    //remove available triskals from all players
+    Object.values(game.players).forEach(player => player.triskalsAvailable = []);
+    
+    game.currentlyPlayingCard = "";
+  }
+
   public static playCard(
     gameId: string,
     playerId: string,
     cardId: string
   ): [string, RestrictedGameState][] {
+    this.saveGameState(gameId);
+
     const game = this.currentGames[gameId];
     const player = game.players[playerId];
 
@@ -317,6 +364,11 @@ export default class GameManager {
 
     //play card
     game.currentlyPlayingCard = cardId; //this tells the game that the card is being played. Next response received will include card manuever
+
+    //if action card mark that geiss is available
+    if(cardId in actionCards){
+      this.makeGeisAvailable(gameId);
+    }
     
     //if no manuever just play the card
     switch(game.currentlyPlayingCard){
@@ -347,6 +399,12 @@ export default class GameManager {
       case "1": 
         this.playBardTriskal(gameId, playerId);
         break;
+      case "8":
+        this.playGeis(gameId, playerId);
+        break;
+      case "13":
+        this.playWarlordTriskal(gameId, playerId);
+        break;
     }
 
     return this.playedCardManuever(gameId, playerId, cardId, true);
@@ -374,6 +432,9 @@ export default class GameManager {
     game.clashes.territories = game.clashes.territories.filter(
       (territory) => territory !== game.clashes.currentlyResolvingTerritory
     );
+
+    //remove any warlord triskals available
+    Object.values(game.players).forEach(player => player.triskalsAvailable = player.triskalsAvailable.filter(x => x != "13"));
 
     //take clans out of citadels
     Object.entries(game.clashes.citadel).forEach(([playerId, numClans]) => {
@@ -419,6 +480,20 @@ export default class GameManager {
       game.clashes.playerTurn = game.clashes.instigatorId;
     }
 
+    //if this card is an action card make geis available true, and set a timeout for 10 seconds to disable it and return state to all players
+    if(cardId in actionCards){
+      this.makeGeisAvailable(gameId);
+      setTimeout(() => {
+        const game = this.currentGames[gameId];
+        game.geisAvailable = false;
+        Object.keys(game.players).forEach((playerId) => {
+          SocketManager.currentSockets[game.players[playerId].socketId].send(
+            JSON.stringify(game.getGameInstance(playerId))
+          );
+        });
+      }, 10 * 1000);
+    }
+
     //remove card manuever
     if(!triskal)
       game.currentlyPlayingCard = "";
@@ -437,6 +512,16 @@ export default class GameManager {
       game.players[playerId].socketId,
       game.getGameInstance(playerId),
     ]);
+  }
+
+  private static makeGeisAvailable (gameId: string) {
+    const game = this.currentGames[gameId];
+    game.geisAvailable = true;
+    //if a player has the geiss in thier hand let them know that triskal is available
+    Object.values(game.players).forEach(player => {
+      if(player.hand.includes("8") && game.seasonPhasePlayerTurn != player.id && !player.triskalsAvailable.includes("8")) //cant play geiss on yourself
+        player.triskalsAvailable.push("8");
+    });
   }
 
   public static chooseClashingTerritory(gameId: string, territoryId: string): [string, RestrictedGameState][] {
@@ -517,6 +602,14 @@ export default class GameManager {
     }
   }
 
+  private static addWarlordTriskal(gameId: string) {
+    const game = this.currentGames[gameId];
+    Object.values(game.players).forEach(player => {
+      if(player.hand.includes("13") && !player.triskalsAvailable.includes("13"))
+        player.triskalsAvailable.push("13")
+    })
+  }
+
   public static clashAttack(gameId: string, attackedPlayerId: string) : [string, RestrictedGameState][] {
     const game = this.currentGames[gameId];
     game.clashes.attackedPlayer = attackedPlayerId;
@@ -526,6 +619,9 @@ export default class GameManager {
       //player must remove a clan from the territory
       game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory)!.clans[attackedPlayerId]--;
       game.clashes.attackedPlayer = "";
+
+      //make warlord triskal available
+      this.addWarlordTriskal(gameId);
 
       //next players turn in clash
       //next person's turn TODO: use flock of crows in this
@@ -557,6 +653,9 @@ export default class GameManager {
       game.players[playerId].hand = game.players[playerId].hand.filter(cardId => cardId != clashAttackResponse.removedCard);
       game.discardedActionCards.push(clashAttackResponse.removedCard);
     }
+
+    //make warlord triskal available
+    this.addWarlordTriskal(gameId);
 
     //player is no longer being attacked
     game.clashes.attackedPlayer = "";
@@ -617,6 +716,25 @@ export default class GameManager {
 
     //remove triskal option
     game.players[playerId].triskalsAvailable = game.players[playerId].triskalsAvailable.filter(triskal => triskal != "1");
+  }
+
+  private static playWarlordTriskal(gameId: string, playerId: string) {
+    //give player an exposed clan
+    const game = this.currentGames[gameId];
+    const clashingTerritory = game.tiles.find(tile => tile.tileId == game.clashes.currentlyResolvingTerritory);
+
+    clashingTerritory!.clans[playerId] += 1;
+    game.currentlyPlayingTriskalCard = "13";
+    game.playerTurnForResolvingTriskal = playerId;
+  }
+
+  public static playWarlordTriskalActionCard(gameId: string, playerId: string, chosenPlayerId: string) {
+    const game = this.currentGames[gameId];
+    game.clashes.playerTurn = chosenPlayerId
+
+    game.players[playerId].triskalsAvailable = game.players[playerId].triskalsAvailable.filter(x => x != "13");
+    game.currentlyPlayingTriskalCard = ""; 
+    return this.playedCardManuever(gameId, playerId, "13", true);
   }
 
   public static playCitadelActionCard(gameId: string, territoryId: string, playerId: string): [string, RestrictedGameState][] {
@@ -730,6 +848,10 @@ export default class GameManager {
     game.seasonPhasePlayerTurn =
       playerKeys[(playerKeys.indexOf(playerId) + 1) % playerKeys.length];
 
+    //TODO: maybe move this logic somewhere elsed
+    //remove available triskals from all players
+    Object.values(game.players).forEach(player => player.triskalsAvailable = []);
+
     //check if all players have passed, then end season phase and start assembly phase
     if (game.passCount == Object.keys(game.players).length) {
       game.isSeasonPhase = false;
@@ -760,6 +882,20 @@ export default class GameManager {
       game.players[playerId].socketId,
       game.getGameInstance(playerId),
     ]);
+  }
+
+  public static playWarlordSeasonActionCard(gameId: string, playerId: string, territory: string, cardId: string) : [string, RestrictedGameState][] {
+    const game = this.currentGames[gameId];
+
+    game.addClash(playerId, territory);
+    
+    //check if clash already resolved, can happen because festival toke
+    this.checkClashResolved(gameId);
+
+    //remove any warlord triskals available
+    Object.values(game.players).forEach(player => player.triskalsAvailable = player.triskalsAvailable.filter(x => x != "13"));
+
+    return this.playedCardManuever(gameId, playerId, cardId);
   }
 
   private static getChiefton(tile: GameTile): string {

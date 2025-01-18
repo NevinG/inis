@@ -102,6 +102,8 @@ enum GameActionType {
   NewAllianceActionCard,
   NewClansActionCard,
   NotImplementedAction,
+  WarlordActionCard,
+  WarlordTriskalActionCard,
 }
 
 export class SocketManager {
@@ -326,6 +328,18 @@ export class SocketManager {
       case GameActionType.NotImplementedAction:
         const NotImplementedAction = gameAction.data as PlayCard;
         GameManager.playNotImplemented(gameAction.gameId, playerId, NotImplementedAction.cardId).forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.WarlordActionCard:
+        const warlordAction = gameAction.data as ChooseTerritory;
+        GameManager.playWarlordSeasonActionCard(gameAction.gameId, playerId, warlordAction.territory, "13").forEach(([socketId, gameState]) => {
+          this.currentSockets[socketId].send(JSON.stringify(gameState));
+        });
+        break;
+      case GameActionType.WarlordTriskalActionCard:
+        const warlordTriskalAction = gameAction.data as ChoosePlayer;
+        GameManager.playWarlordTriskalActionCard(gameAction.gameId, playerId, warlordTriskalAction.playerId).forEach(([socketId, gameState]) => {
           this.currentSockets[socketId].send(JSON.stringify(gameState));
         });
         break;

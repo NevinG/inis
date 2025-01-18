@@ -54,4 +54,16 @@ export class Player {
       hasPretenderToken: this.hasPretenderToken,
     };
   }
+
+  clone(): Player {
+    const player = new Player(this.id, this.socketId, this.name);
+    player.ready = this.ready;
+    player.hand = [...this.hand];
+    player.triskalsAvailable = [...this.triskalsAvailable];
+    player.reserveClans = this.reserveClans;
+    player.deedCount = this.deedCount;
+    player.color = this.color;
+    player.hasPretenderToken = this.hasPretenderToken;
+    return player;
+  }
 }

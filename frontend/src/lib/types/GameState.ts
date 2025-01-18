@@ -45,6 +45,10 @@ export type RestrictedGameState = {
   isSeasonPhase: boolean;
   seasonPhasePlayerTurn: string;
   currentlyPlayingCard: string;
+  currentlyPlayingTriskalCard: string;
+  playerTurnForResolvingTriskal: string;
+
+  geisAvailable: boolean;
 
   //extra info passed based on currentlyPlayingCard
   discardedCards: string[]; //for druid card 
