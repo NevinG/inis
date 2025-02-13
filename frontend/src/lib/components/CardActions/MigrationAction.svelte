@@ -21,7 +21,6 @@
 		const tile = gameTiles.find((tile) => tile.tileId == tileId);
 
 		if (actionStep == 0) {
-			tile!.selected = true;
 			targetTile = tileId;
 			actionStep = 1;
 		}
@@ -58,7 +57,7 @@
 </script>
 
 <div style:width="100%" style:height="65%">
-	<GameMap {restrictedGameState} {selectTile} {clanMoves} let:tile>
+	<GameMap {restrictedGameState} {clanMoves} let:tile>
 		{#if actionStep == 1 && tile.tileId != targetTile && tilesAdjacent( tile, restrictedGameState.tiles.find((tile) => tile.tileId == targetTile) )}
 			{#if (restrictedGameState.tiles.find((tile) => tile.tileId == targetTile)?.clans[restrictedGameState.playerId] ?? 0) - clanMoves.reduce((totalFrom, move) => (move.from == targetTile ? move.numClans + totalFrom : totalFrom), 0) > 0}
 				<button
@@ -74,6 +73,26 @@
 					}}>Move Back</button
 				>
 			{/if}
+		{/if}
+		{#if actionStep == 0 && tile.clans[restrictedGameState.playerId] > 0}
+			<button
+				on:click={() => {
+					selectTile(tile.tileId);
+				}}>Select</button
+			>
+		{/if}
+		{#if actionStep == 1 && tile.tileId == targetTile}
+			<button
+				on:click={() => {
+					//reset selected territory
+					gameTiles.forEach((tile) => (tile.selected = false));
+					actionStep = 0;
+					clanMoves = [];
+					clanMoves = clanMoves;
+					restrictedGameState = restrictedGameState;
+				}}
+				style:height="25px">Unselect</button
+			>
 		{/if}
 	</GameMap>
 </div>
@@ -93,17 +112,6 @@
 	{/if}
 	&nbsp;
 	{#if actionStep == 1}
-		<button
-			on:click={() => {
-				//reset selected territory
-				gameTiles.forEach((tile) => (tile.selected = false));
-				actionStep = 0;
-				clanMoves = [];
-				clanMoves = clanMoves;
-				restrictedGameState = restrictedGameState;
-			}}
-			style:height="25px">Repick initial territory</button
-		>
 		<button
 			disabled={actionStep != 1}
 			on:click={async () => {

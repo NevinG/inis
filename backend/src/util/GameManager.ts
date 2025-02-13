@@ -322,7 +322,7 @@ export default class GameManager {
     this.restoreGameState(gameId);
     const game = this.currentGames[gameId];
 
-    //remove geiss card from hand
+    //remove geis card from hand
     this.currentGames[gameId].players[playerId].hand = this.currentGames[gameId].players[playerId].hand.filter(cardId => cardId != "8");
 
     //move turn order

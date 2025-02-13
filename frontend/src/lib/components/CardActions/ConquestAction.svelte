@@ -17,11 +17,10 @@
 
 	//apply clan moves to gameState
 
-	async function selectTile(tileId: string) {
+	function selectTile(tileId: string) {
 		const tile = gameTiles.find((tile) => tile.tileId == tileId);
 
 		if (actionStep == 0) {
-			tile!.selected = true;
 			targetTile = tileId;
 			actionStep = 1;
 		}
@@ -58,7 +57,7 @@
 </script>
 
 <div style:width="100%" style:height="65%">
-	<GameMap {restrictedGameState} {selectTile} {clanMoves} let:tile>
+	<GameMap {restrictedGameState} {clanMoves} let:tile>
 		{#if actionStep == 1 && tile.tileId != targetTile && tilesAdjacent( tile, restrictedGameState.tiles.find((tile) => tile.tileId == targetTile) )}
 			{#if (tile.clans[restrictedGameState.playerId] ?? 0) > 0}
 				<button
@@ -75,6 +74,27 @@
 				>
 			{/if}
 		{/if}
+		{#if actionStep == 0 && restrictedGameState.tiles.some(otherTile => 
+				tilesAdjacent(tile, otherTile) && tile.tileId != otherTile.tileId && 
+				(otherTile.clans[restrictedGameState.playerId] ?? 0) > 0)
+		}
+			<button
+					on:click={() => {
+				selectTile(tile.tileId);
+					}}>Select</button>
+		{/if}
+		{#if actionStep == 1 && tile.tileId == targetTile}
+			<button
+				on:click={() => {
+					//reset selected territory
+					gameTiles.forEach((tile) => (tile.selected = false));
+					actionStep = 0;
+					clanMoves = [];
+					restrictedGameState = restrictedGameState;
+				}}
+				style:height="25px">Unselect</button
+			>
+		{/if}
 	</GameMap>
 </div>
 <div
@@ -89,22 +109,12 @@
 	{#if actionStep == 0}
 		<span>Choose a territory</span>
 	{:else if actionStep == 1}
-		<span>Select a territory to move clan into target territory</span>
+		<span>Move clans into chosen territory</span>
 	{/if}
 	&nbsp;
 	{#if actionStep == 1}
 		<button
-			on:click={() => {
-				//reset selected territory
-				gameTiles.forEach((tile) => (tile.selected = false));
-				actionStep = 0;
-				clanMoves = [];
-				restrictedGameState = restrictedGameState;
-			}}
-			style:height="25px">Repick initial territory</button
-		>
-		<button
-			disabled={actionStep != 1}
+			disabled={clanMoves.length == 0}
 			on:click={async () => {
 				socket.send(JSON.stringify(await GameActionFactory.conquestActionCard(gameId, clanMoves)));
 			}}
