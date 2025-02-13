@@ -13,3 +13,78 @@ Take a look at the [issues](https://github.com/NevinG/inis/issues) to get starte
 ## ⬤ I want to play!
 
 This project is under development.
+
+
+Current TODOS (✅/❌):
+
+# Cards
+
+Implement all Action Cards:
+ - Bard ❌
+ - Citadel ❌
+ - Conquest ❌
+ - Craftsmen & Peasants ❌
+ - Druid ❌
+ - Emissaries ❌
+ - Exploration ❌
+ - Festival ❌
+ - Geis ❌
+ - Master Craftsman ❌
+ - Migration ❌
+ - New Alliance ❌
+ - New Clans ❌
+ - Raid ❌
+ - Sanctuary ❌
+ - Scouts & Spies ❌
+ - Warlord ❌
+
+Implement all Advantage Cards:
+ - Cove ❌
+ - Forest ❌
+ - Gates of Tir Na Nog ❌
+ - Highlands ❌
+ - Hills ❌
+ - Iron Mine ❌
+ - Lost Vale ❌
+ - Meadows ❌
+ - Misty Lands ❌
+ - Moor ❌
+ - Mountains ❌
+ - Plains ❌
+ - Salt Mine ❌
+ - Stone Circle ❌
+ - Swamp ❌
+ - Valley ❌
+
+Implement all Epic Tale Cards:
+ - Balor's Eye ❌
+ - Battle Frenzy ❌
+ - The Battle of Moytura ❌
+ - Breas' Tyranny ❌
+ - CathBad's Word ❌
+ - The Champion's Share ❌
+ - Children of Dana ❌
+ - The Dagda ❌
+ - Dagda's Cauldron ❌
+ - The Dagda's Club ❌
+ - Dagda's Harp ❌
+ - Deirdre's Beauty ❌
+ - Diarmuid and Grainne ❌
+ - Eriu ❌
+ - The Fianna ❌
+ - Kernuno's Sanctuary ❌
+ - Lug Samildanach ❌
+ - Lug's Spear ❌
+ - Maeve's Wealth ❌
+ - Manannan's Horses ❌
+ - The Morrigan ❌
+ - Nuada Silverhand ❌
+ - Oengus's Ploy ❌
+ - Ogma's Eloquence ❌
+ - The Other World ❌
+ - The Stone of Fal ❌
+ - Streng's Resolve ❌
+ - Tailtu's Land ❌
+ - Tale of Cuchulain ❌
+ - Tuan's Memory ❌
+

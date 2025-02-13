@@ -7,6 +7,10 @@ export type GamePreview = {
 	maxPlayers: number;
 };
 
+export interface GameUIState {
+  selectedCards: string[];
+}
+
 export type RestrictedGameState = {
   id: string;
   playerId: string;

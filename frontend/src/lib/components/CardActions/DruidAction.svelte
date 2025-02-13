@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { actionCards, advantageCards, epicTaleCards, type SelectableCard } from '$lib/types/Card';
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import GameBottomBar from '../GameBottomBar.svelte';
 	import GameMap from '../GameMap.svelte';
 	import CardComponent from '$lib/components/Card.svelte';
@@ -9,6 +9,7 @@
 	export let restrictedGameState: RestrictedGameState;
 	export let socket: WebSocket;
 	export let gameId: string;
+	export let gameUIState: GameUIState;
 
 	//remove selection from all other cards
 	restrictedGameState.discardedCards.forEach((cardId) => {
@@ -77,5 +78,5 @@
 	>
 </div>
 <div style:width="100%" style:height="20%">
-	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
+	<GameBottomBar bind:gameUIState={gameUIState} {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>

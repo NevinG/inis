@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import GameBottomBar from '../GameBottomBar.svelte';
 	import GameMap from '../GameMap.svelte';
 	export let restrictedGameState: RestrictedGameState;
 
 	export let socket: WebSocket;
 	export let gameId: string;
+	export let gameUIState: GameUIState;
 </script>
 
 <div style:width="100%" style:height="65%">
@@ -23,5 +24,5 @@
 	<span>The bren is placing the tile for you!</span>
 </div>
 <div style:width="100%" style:height="20%">
-	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
+	<GameBottomBar bind:gameUIState={gameUIState} {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>

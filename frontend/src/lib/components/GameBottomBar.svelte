@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { actionCards, advantageCards, CardType, epicTaleCards, type SelectableCard } from '$lib/types/Card';
 	import { GameActionFactory } from '$lib/types/GameActions';
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import PlayerCards from './PlayerCards.svelte';
 
 	export let restrictedGameState: RestrictedGameState;
 	export let socket: WebSocket;
 	export let gameId: string;
 	export let interactive: boolean = true;
+	export let gameUIState : GameUIState;
 
 	$: myCards = restrictedGameState.players[restrictedGameState.playerId].hand.map(
 		(cardId) => actionCards[cardId] ?? advantageCards[cardId] ?? epicTaleCards[cardId]
 	) as SelectableCard[];
+	
 </script>
 
 <!-- triskals -->
@@ -45,7 +47,7 @@
 	style:align-items="center"
 	style:z-index="2"
 >
-	<PlayerCards {restrictedGameState} {socket} {gameId}></PlayerCards>
+	<PlayerCards {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}></PlayerCards>
 	{#if restrictedGameState.isSeasonPhase && restrictedGameState.playerId == restrictedGameState.seasonPhasePlayerTurn && interactive}
 		<div style:padding="5px">
 			<button
@@ -54,9 +56,10 @@
 				}}>Pass</button
 			><br />
 			<button
+			  disabled = {gameUIState.selectedCards.length == 0}
 				on:click={
 					async () => {
-						if (myCards.filter(card => card.type == CardType.Action).length == 1 && ((myCards.find((card) => card.selected)?.id ?? '') == '5')) {
+						if (myCards.filter(card => card.type == CardType.Action).length == 1 && (gameUIState.selectedCards[0] == '5')) {
 							alert("cant play druid as last action card"); 
 							return;
 						}; //can't play druid if last actin card
@@ -65,13 +68,13 @@
 							JSON.stringify(
 								await GameActionFactory.playCard(
 									gameId,
-									myCards.find((card) => card.selected)?.id ?? ''
+									gameUIState.selectedCards[0]
 								)
 							)
 						);
 					}
 				}
-				>Play{myCards.find((card) => card.selected)?.id ?? ''}</button
+				>Play {myCards.find(x => x.id == gameUIState.selectedCards[0])?.name ?? "Card"}</button
 			><br />
 			<button
 				on:click={async () => {

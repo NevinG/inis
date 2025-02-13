@@ -6,13 +6,14 @@
 		epicTaleCards,
 		type SelectableCard
 	} from '$lib/types/Card';
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import CardComponent from '$lib/components/Card.svelte';
 	import { GameActionFactory } from '$lib/types/GameActions';
 
 	export let restrictedGameState: RestrictedGameState;
 	export let socket: WebSocket;
 	export let gameId: string;
+	export let gameUIState: GameUIState;
 
 	$: myCards = restrictedGameState.players[restrictedGameState.playerId].hand.map(
 		(cardId) => actionCards[cardId] ?? advantageCards[cardId] ?? epicTaleCards[cardId]
@@ -22,26 +23,32 @@
 	$: myAdvantageCards = myCards.filter((card) => card.type == CardType.Advantage);
 
 	function toggleSelectCard(card: SelectableCard) {
-		if (!restrictedGameState.isDrafting) {
-			//remove selection from all other cards
-			myCards.forEach((c) => {
-				if (card == c) {
-					return;
-				}
-				c.selected = false;
-			});
-		}
-
 		//if we are drafting, only allow selecting action cards
-		if (restrictedGameState.isDrafting && !(card.id in actionCards)) return;
+		if (restrictedGameState.isDrafting && !(card.id in actionCards)) 
+			return;
 
 		//can't select cards if we already selected them
 		if (restrictedGameState.isDrafting && myActionCards.length == restrictedGameState.cardsToDraft)
 			return;
 
-		card.selected = !(card.selected ?? false);
-		myCards = myCards;
+		if (!restrictedGameState.isDrafting) {
+			//remove selection from all other cards
+			if(gameUIState.selectedCards.includes(card.id)) {
+				gameUIState.selectedCards = [];
+			} else {
+				gameUIState.selectedCards = [card.id];
+			}
+		} else {
+			if (gameUIState.selectedCards.includes(card.id)) {
+				gameUIState.selectedCards = gameUIState.selectedCards.filter((c) => c != card.id);
+			} else {
+				gameUIState.selectedCards.push(card.id);
+			}
+		}
+
+		gameUIState = gameUIState;
 	}
+	$: console.log(gameUIState)
 </script>
 
 <div
@@ -68,7 +75,12 @@
 				toggleSelectCard(actionCard);
 			}}
 		>
-			<CardComponent hovering={actionCard.hovering} card={actionCard} height="100%"></CardComponent>
+			<CardComponent
+				selected={gameUIState.selectedCards.includes(actionCard.id)}
+				hovering={actionCard.hovering}
+				card={actionCard}
+				height="100%"
+			></CardComponent>
 		</div>
 	{/each}
 
@@ -89,7 +101,11 @@
 				toggleSelectCard(epicTaleCard);
 			}}
 		>
-			<CardComponent hovering={epicTaleCard.hovering} card={epicTaleCard} height="100%"
+			<CardComponent
+				selected={gameUIState.selectedCards.includes(epicTaleCard.id)}
+				hovering={epicTaleCard.hovering}
+				card={epicTaleCard}
+				height="100%"
 			></CardComponent>
 		</div>
 	{/each}
@@ -111,7 +127,11 @@
 				toggleSelectCard(advantageCard);
 			}}
 		>
-			<CardComponent hovering={advantageCard.hovering} card={advantageCard} height="100%"
+			<CardComponent
+				selected={gameUIState.selectedCards.includes(advantageCard.id)}
+				hovering={advantageCard.hovering}
+				card={advantageCard}
+				height="100%"
 			></CardComponent>
 		</div>
 	{/each}
@@ -119,24 +139,22 @@
 	{#if restrictedGameState.isDrafting && myActionCards.length != restrictedGameState.cardsToDraft}
 		<button
 			style:height="30px"
-			disabled={myActionCards.filter((card) => card.selected).length !==
+			disabled={gameUIState.selectedCards.filter(x => x in actionCards).length !==
 				restrictedGameState.cardsToDraft}
 			on:click={async () => {
 				socket.send(
 					JSON.stringify(
 						await GameActionFactory.draftCards(
 							gameId,
-							myCards.filter((card) => card.selected).map((card) => card.id)
+							gameUIState.selectedCards,
 						)
 					)
 				);
 				//remove selection from all other cards
-				myCards.forEach((c) => {
-					c.selected = false;
-				});
+				gameUIState.selectedCards = [];
+				gameUIState = gameUIState;
 			}}
-			>Draft Cards ({myActionCards.filter((card) => card.selected)
-				.length}/{restrictedGameState.cardsToDraft})</button
+			>Draft Cards ({gameUIState.selectedCards.length}/{restrictedGameState.cardsToDraft})</button
 		>
 	{/if}
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { actionCards, advantageCards, epicTaleCards, type SelectableCard } from '$lib/types/Card';
 	import { GameActionFactory } from '$lib/types/GameActions';
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import CitadelAction from './CardActions/CitadelAction.svelte';
 	import Clash from './CardActions/Clash.svelte';
 	import ConquestAction from './CardActions/ConquestAction.svelte';
@@ -27,14 +27,9 @@
 
 	export let socket: WebSocket;
 	export let gameId: string;
-
-	//removes selected from all cards.
-	$: if (restrictedGameState.currentlyPlayingCard == '') {
-		restrictedGameState.players[restrictedGameState.playerId].hand.forEach((cardId) => {
-			(
-				(actionCards[cardId] ?? epicTaleCards[cardId] ?? advantageCards[cardId]) as SelectableCard
-			).selected = false;
-		});
+	
+	let gameUIState : GameUIState = {
+		selectedCards: [] as string[],
 	}
 
 	async function selectTile(tileId: string) {
@@ -59,48 +54,48 @@
 	<!-- Render game for performing specific action -->
 	<!-- render clash -->
 	{#if restrictedGameState.clashes.instigatorId} 
-		<Clash {restrictedGameState} {socket} {gameId} />
+		<Clash bind:gameUIState={gameUIState} {restrictedGameState} {socket} {gameId} />
 	<!-- render specific action cards on your turn -->
 	{:else if restrictedGameState.currentlyPlayingCard && restrictedGameState.seasonPhasePlayerTurn == restrictedGameState.playerId}
 		<!-- Sanctuary render -->
 		{#if restrictedGameState.currentlyPlayingCard == '12'}
-			<SanctuaryAction {restrictedGameState} {socket} {gameId} />
+			<SanctuaryAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '2'}
-			<CitadelAction {restrictedGameState} {socket} {gameId} />
+			<CitadelAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '3'}
-			<ConquestAction {restrictedGameState} {socket} {gameId} />
+			<ConquestAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '4'}
-			<CraftsmanAndPeasantsAction {restrictedGameState} {socket} {gameId} />
+			<CraftsmanAndPeasantsAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '5'}
-			<DruidAction {restrictedGameState} {socket} {gameId} />
+			<DruidAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '6'}
 			{#if restrictedGameState.bren == restrictedGameState.playerId}
-				<ExplorationActionBren {restrictedGameState} {socket} {gameId} />
+				<ExplorationActionBren {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 			{:else}
-				<ExplorationAction {restrictedGameState} {socket} {gameId} />
+				<ExplorationAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 			{/if}
 		{:else if restrictedGameState.currentlyPlayingCard == '7'}
-			<FestivalAction {restrictedGameState} {socket} {gameId} />
+			<FestivalAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '9'}
-			<MigrationAction {restrictedGameState} {socket} {gameId} />
+			<MigrationAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '10'}
-			<NewAllianceAction {restrictedGameState} {socket} {gameId} />
+			<NewAllianceAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '11'}
-			<NewClansAction {restrictedGameState} {socket} {gameId} />
+			<NewClansAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else if restrictedGameState.currentlyPlayingCard == '13'}
-			<WarlordAction {restrictedGameState} {socket} {gameId} />
+			<WarlordAction {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{:else}
-		  <NotImplemented {restrictedGameState} {socket} {gameId} />
+		  <NotImplemented {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		{/if}
 		<!-- Default render -->
 	{:else if restrictedGameState.bren == restrictedGameState.playerId && restrictedGameState.currentlyPlayingCard == '6'}
-		<ExplorationActionBren {restrictedGameState} {socket} {gameId} />
+		<ExplorationActionBren {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 	{:else}
 		<div style:width="100%" style:height="65%">
 			<GameMap {restrictedGameState} {selectTile} />
 		</div>
 		<div style:width="100%" style:height="20%">
-			<GameBottomBar {restrictedGameState} {socket} {gameId} />
+			<GameBottomBar {restrictedGameState} {socket} {gameId} bind:gameUIState={gameUIState}/>
 		</div>
 	{/if}
 {:else}

@@ -21,7 +21,7 @@
 			: card.type == CardType.EpicTale
 				? '#ffe6e6'
 				: ''}
-	style:border-width={card.selected || selected ? '3px' : '1px'}
+	style:border-width={selected ? '3px' : '1px'}
 	style:overflow="hidden"
 >
 	<h3 style:text-align="center" style:margin-top="0">{card.name}</h3>

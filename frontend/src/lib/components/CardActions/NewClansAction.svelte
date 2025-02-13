@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { GameActionFactory } from '$lib/types/GameActions';
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import type { GameTile } from '$lib/types/Tile';
 	import GameBottomBar from '../GameBottomBar.svelte';
 	import GameMap from '../GameMap.svelte';
@@ -9,6 +9,7 @@
 
 	export let socket: WebSocket;
 	export let gameId: string;
+	export let gameUIState: GameUIState;
 
 	function addClan(tile: GameTile & { selected: boolean }) {
 		const addedClan = addedClans.find((clan) => clan.territory == tile.tileId);
@@ -67,5 +68,5 @@
 	>
 </div>
 <div style:width="100%" style:height="20%">
-	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
+	<GameBottomBar bind:gameUIState={gameUIState} {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>

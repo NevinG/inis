@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { actionCards, advantageCards, epicTaleCards, type SelectableCard } from '$lib/types/Card';
 	import { GameActionFactory } from '$lib/types/GameActions';
-	import type { RestrictedGameState } from '$lib/types/GameState';
+	import type { GameUIState, RestrictedGameState } from '$lib/types/GameState';
 	import { allTiles, type GameTile } from '$lib/types/Tile';
 	import GameBottomBar from '../GameBottomBar.svelte';
 	import GameMap from '../GameMap.svelte';
@@ -14,6 +14,7 @@
 
 	export let socket: WebSocket;
 	export let gameId: string;
+	export let gameUIState: GameUIState;
 
 	let choseAttack = false;
 	let choseWithdraw = false;
@@ -151,9 +152,9 @@
 				socket.send(JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, true, "")));
 				resetClashChoices();
 			}}>Remove Clan</button>&nbsp;
-			<button on:click={async () => { //TODO: test if I need this line or if it does anything
+			<button disabled={gameUIState.selectedCards.filter(cardId => actionCards[cardId] != undefined).length != 1} on:click={async () => { //TODO: test if I need this line or if it does anything
 				myCards = myCards;
-				const selectedCard = myCards.find(card => card.selected)?.id;
+				const selectedCard = gameUIState.selectedCards.filter(cardId => actionCards[cardId] != undefined)[0];
 				if(selectedCard)
 					socket.send(JSON.stringify(await GameActionFactory.clashAttackResponse(gameId, false, selectedCard)));
 					resetClashChoices();
@@ -218,5 +219,5 @@
 	{/if}
 </div>
 <div style:width="100%" style:height="20%">
-	<GameBottomBar {restrictedGameState} {socket} {gameId} interactive={false} />
+	<GameBottomBar bind:gameUIState={gameUIState} {restrictedGameState} {socket} {gameId} interactive={false} />
 </div>
